@@ -210,7 +210,7 @@ if __name__ == "__main__":
     # defining a list box using the tk.Listbox() widget  
     task_listbox = tk.Listbox(  
         listbox_frame,  
-        width = 26,  
+        width = 39,  
         height = 13,  
         selectmode = 'SINGLE',  
         background = "#FFFFFF",  
