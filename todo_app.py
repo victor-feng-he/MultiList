@@ -15,9 +15,9 @@ def add_task():
         messagebox.showinfo('Error', 'Field is Empty.')  
     else:  
         # adding the string to the tasks list  
-        tasks.append(task_string, due_date)  
+        tasks.append((task_string, due_date))  
         # using the execute() method to execute a SQL statement  
-        the_cursor.execute('insert into tasks values (?)', (task_string, due_date))  
+        the_cursor.execute('insert into tasks (title, due_date) values (?, ?)', (task_string, due_date))  
         # calling the function to update the list  
         list_update()  
         # deleting the entry in the entry field  
@@ -76,7 +76,7 @@ def clear_list():
 # function to close the application  
 def close():  
     # printing the elements from the tasks list  
-    print(tasks)  
+    print(tasks)
     # using the destroy() method to close the application  
     guiWindow.destroy()  
   
@@ -90,7 +90,7 @@ def retrieve_database():
     for row in the_cursor.execute('select title from tasks'):  
         # using the append() method to insert the titles from the table in the list  
         tasks.append(row[0])  
-  
+
 # main function  
 if __name__ == "__main__":  
     # creating an object of the Tk() class  
