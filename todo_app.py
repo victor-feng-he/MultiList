@@ -15,18 +15,21 @@ def add_task():
         messagebox.showinfo('Error', 'Field is Empty.')  
     else:  
         # adding the string to the tasks list  
-        tasks.append(task_string)  
+        tasks.append(task_string, due_date)  
         # using the execute() method to execute a SQL statement  
-        the_cursor.execute('insert into tasks values (?)', (task_string ,))  
+        the_cursor.execute('insert into tasks values (?)', (task_string, due_date))  
         # calling the function to update the list  
         list_update()  
         # deleting the entry in the entry field  
-        task_field.delete(0, 'end')  
+        task_field.delete(0, 'end')
+        due_date_entry.delete(0, 'end')
   
 # defining the function to update the list  
 def list_update():  
     # calling the function to clear the list  
-    clear_list()  
+    clear_list()
+    # Sort tasks by due date
+    sorted_tasks = sorted(tasks, key=lambda x: x[1])
     # iterating through the strings in the list  
     for task in tasks:  
         # using the insert() method to insert the tasks in the list box  
@@ -152,7 +155,26 @@ if __name__ == "__main__":
         foreground = "#A52A2A"  
     )  
     # using the place() method to place the entry field in the application  
-    task_field.place(x = 30, y = 80)  
+    task_field.place(x = 30, y = 80)
+    
+    due_date_label = ttk.Label(
+    functions_frame,
+    text="Due Date:",
+    font=("Consolas", "11", "bold"),
+    background="#FAEBD7",
+    foreground="#000000"
+    )
+    due_date_label.place(x=30, y=280)
+
+    due_date_entry = ttk.Entry(
+    functions_frame,
+    font=("Consolas", "12"),
+    width=18,
+    background="#FFF8DC",
+    foreground="#A52A2A"
+    )
+    due_date_entry.place(x=30, y=320)
+
   
     # adding buttons to the application using the ttk.Button() widget  
     add_button = ttk.Button(  
