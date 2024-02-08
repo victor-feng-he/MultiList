@@ -8,6 +8,7 @@ import sqlite3 as sql                   # importing the sqlite3 module as sql
 def add_task():  
     # getting the string from the entry field  
     task_string = task_field.get()  
+    due_date = due_date_entry.get()
     # checking whether the string is empty or not  
     if len(task_string) == 0:  
         # displaying a message box with 'Empty Field' message  
@@ -105,7 +106,7 @@ if __name__ == "__main__":
     # creating the cursor object of the cursor class  
     the_cursor = the_connection.cursor()  
     # using the execute() method to execute a SQL statement  
-    the_cursor.execute('create table if not exists tasks (title text)')  
+    the_cursor.execute('create table if not exists tasks (title text, due_date text)')  
   
     # defining an empty list  
     tasks = []  
