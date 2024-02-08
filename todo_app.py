@@ -31,7 +31,7 @@ def list_update():
     # Sort tasks by due date
     sorted_tasks = sorted(tasks, key=lambda x: x[1])
     # iterating through the strings in the list  
-    for task in tasks:  
+    for task in sorted_tasks:  
         # using the insert() method to insert the tasks in the list box  
         task_listbox.insert('end', task)  
   
