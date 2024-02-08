@@ -33,7 +33,7 @@ def list_update():
     # iterating through the strings in the list  
     for task in sorted_tasks:  
         # using the insert() method to insert the tasks in the list box  
-        task_listbox.insert('end', task)  
+        task_listbox.insert('end', f"{task[0]} - {task[1]}")  
   
 # defining the function to delete a task from the list  
 def delete_task():  
@@ -87,9 +87,9 @@ def retrieve_database():
         # using the pop() method to pop out the elements from the list  
         tasks.pop()  
     # iterating through the rows in the database table  
-    for row in the_cursor.execute('select title from tasks'):  
+    for row in the_cursor.execute('select title, due_date from tasks'):  
         # using the append() method to insert the titles from the table in the list  
-        tasks.append(row[0])  
+        tasks.append((row[0], row[1]))  
 
 # main function  
 if __name__ == "__main__":  
