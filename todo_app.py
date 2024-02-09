@@ -9,6 +9,20 @@ def add_task():
     # getting the string from the entry field  
     task_string = task_field.get()  
     due_date = due_date_entry.get()
+    
+    # Open a new window for task description
+    description_window = tk.Toplevel(guiWindow)
+    description_window.title("Task Description")
+    description_window.geometry("300x150")
+    
+
+    # Entry field for task description
+    description_label = ttk.Label(description_window, text="Task Description:")
+    description_label.pack(pady=5)
+    
+    description_entry = ttk.Entry(description_window, font=("Consolas", "12"), width=25)
+    description_entry.pack(pady=5)
+    
     # checking whether the string is empty or not  
     if len(task_string) == 0:  
         # displaying a message box with 'Empty Field' message  
@@ -23,6 +37,33 @@ def add_task():
         # deleting the entry in the entry field  
         task_field.delete(0, 'end')
         due_date_entry.delete(0, 'end')
+        
+def finish_adding_task():
+        description = description_entry.get()
+        if len(task_string) == 0:
+            messagebox.showinfo('Error', 'Field is Empty.')
+        else:
+            tasks.append((task_string, due_date, description))
+            the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
+                               (task_string, due_date, description))
+            list_update()
+            task_field.delete(0, 'end')
+            due_date_entry.delete(0, 'end')
+            description_entry.delete(0, 'end')
+            description_window.destroy()
+
+        # Button to finish adding the task
+        finish_button = ttk.Button(description_window, text="Finish", command=finish_adding_task)
+        finish_button.pack(pady=10)
+
+def on_hover(event):
+    selected_task = task_listbox.get(task_listbox.nearest(event.y))
+    if selected_task:
+        # Get the task details, including the description
+        task_details = next(task for task in tasks if f"{task[0]} - Due Date: {task[1]}" in selected_task)
+        task_description_label.config(text=f"Task Description: {task_details[2]}")
+    else:
+        task_description_label.config(text="Task Description: ")
   
 # defining the function to update the list  
 def list_update():  
@@ -229,3 +270,11 @@ if __name__ == "__main__":
     # establishing the connection with database  
     the_connection.commit()  
     the_cursor.close() 
+    
+    # Binding the on_hover function to the Enter event for listbox items
+    task_listbox.bind("<Enter>", on_hover)
+
+    # Displaying task description label
+    task_description_label = ttk.Label(listbox_frame, text="Task Description: ", font=("Consolas", "11", "bold"),
+                                        background="#FAEBD7", foreground="#000000")
+    task_description_label.place(x=10, y=350)
