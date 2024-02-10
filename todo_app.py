@@ -6,6 +6,7 @@ import sqlite3 as sql                   # importing the sqlite3 module as sql
   
 # defining the function to add tasks to the list  
 def add_task():  
+    global description_entry, task_string, due_date
     # getting the string from the entry field  
     task_string = task_field.get()  
     due_date = due_date_entry.get()
@@ -23,48 +24,38 @@ def add_task():
     description_entry = ttk.Entry(description_window, font=("Consolas", "12"), width=25)
     description_entry.pack(pady=5)
     
-    # checking whether the string is empty or not  
-    if len(task_string) == 0:  
-        # displaying a message box with 'Empty Field' message  
-        messagebox.showinfo('Error', 'Field is Empty.')  
-    else:  
-        # adding the string to the tasks list  
-        tasks.append((task_string, due_date))  
-        # using the execute() method to execute a SQL statement  
-        the_cursor.execute('insert into tasks (title, due_date) values (?, ?)', (task_string, due_date))  
-        # calling the function to update the list  
-        list_update()  
-        # deleting the entry in the entry field  
+    # Button to finish adding the task
+    finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date))
+    finish_button.pack(pady=10)
+
+def finish_adding_task(description_window, description_entry, task_string, due_date):
+    description = description_entry.get()
+    if len(description) == 0:
+        messagebox.showinfo('Error', 'Field is Empty.')
+    else:
+        tasks.append((task_string, due_date, description))
+        the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
+                           (task_string, due_date, description))
+        list_update()
         task_field.delete(0, 'end')
         due_date_entry.delete(0, 'end')
+        description_entry.delete(0, 'end')
+        description_window.destroy()
+
+def show_task_description():
+    selected_task_index = task_listbox.curselection()
+    if selected_task_index:
+        selected_task = tasks[selected_task_index[0]]
+        description_window = tk.Toplevel(guiWindow)
+        description_window.title("Task Description")
+        description_window.geometry("300x150")
+
+        description_label = ttk.Label(description_window, text="Task Description:")
+        description_label.pack(pady=5)
+
+        description_text = ttk.Label(description_window, text=selected_task[2], font=("Consolas", "12"))
+        description_text.pack(pady=10)
         
-def finish_adding_task():
-        description = description_entry.get()
-        if len(task_string) == 0:
-            messagebox.showinfo('Error', 'Field is Empty.')
-        else:
-            tasks.append((task_string, due_date, description))
-            the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
-                               (task_string, due_date, description))
-            list_update()
-            task_field.delete(0, 'end')
-            due_date_entry.delete(0, 'end')
-            description_entry.delete(0, 'end')
-            description_window.destroy()
-
-        # Button to finish adding the task
-        finish_button = ttk.Button(description_window, text="Finish", command=finish_adding_task)
-        finish_button.pack(pady=10)
-
-def on_hover(event):
-    selected_task = task_listbox.get(task_listbox.nearest(event.y))
-    if selected_task:
-        # Get the task details, including the description
-        task_details = next(task for task in tasks if f"{task[0]} - Due Date: {task[1]}" in selected_task)
-        task_description_label.config(text=f"Task Description: {task_details[2]}")
-    else:
-        task_description_label.config(text="Task Description: ")
-  
 # defining the function to update the list  
 def list_update():  
     # calling the function to clear the list  
@@ -74,7 +65,7 @@ def list_update():
     # iterating through the strings in the list  
     for task in sorted_tasks:  
         # using the insert() method to insert the tasks in the list box  
-        task_listbox.insert('end', f"{task[0]} - {task[1]}")  
+        task_listbox.insert('end', f"{task[0]} {task[1]}")  
   
 # defining the function to delete a task from the list  
 def delete_task():  
@@ -128,9 +119,9 @@ def retrieve_database():
         # using the pop() method to pop out the elements from the list  
         tasks.pop()  
     # iterating through the rows in the database table  
-    for row in the_cursor.execute('select title, due_date from tasks'):  
+    for row in the_cursor.execute('select title, due_date, description from tasks'):  
         # using the append() method to insert the titles from the table in the list  
-        tasks.append((row[0], row[1]))  
+        tasks.append((row[0], row[1], row[2]))  
 
 # main function  
 if __name__ == "__main__":  
@@ -150,7 +141,7 @@ if __name__ == "__main__":
     # creating the cursor object of the cursor class  
     the_cursor = the_connection.cursor()  
     # using the execute() method to execute a SQL statement  
-    the_cursor.execute('create table if not exists tasks (title text, due_date text)')  
+    the_cursor.execute('create table if not exists tasks (title text, due_date text, description text)')  
   
     # defining an empty list  
     tasks = []  
@@ -163,7 +154,29 @@ if __name__ == "__main__":
     # using the pack() method to place the frames in the application  
     header_frame.pack(fill = "both")  
     functions_frame.pack(side = "left", expand = True, fill = "both")  
-    listbox_frame.pack(side = "right", expand = True, fill = "both")  
+    listbox_frame.pack(side = "right", expand = True, fill = "both")
+    
+    # defining a list box using the tk.Listbox() widget  
+    task_listbox = tk.Listbox(  
+        listbox_frame,  
+        width=39,  
+        height=13,  
+        selectmode='SINGLE',  
+        background="#FFFFFF",  
+        foreground="#000000",  
+        selectbackground="#CD853F",  
+        selectforeground="#FFFFFF"  
+    )  
+    # using the place() method to place the list box in the application  
+    task_listbox.place(x=10, y=20)  
+
+    # Binding the show_task_description function to the Enter event for listbox items
+    task_listbox.bind("<ButtonRelease-1>", lambda event: show_task_description())
+
+    # Displaying task description label
+    task_description_label = ttk.Label(listbox_frame, text="Task Description: ", font=("Consolas", "11", "bold"),
+                                        background="#FAEBD7", foreground="#000000")
+    task_description_label.place(x=10, y=350)
       
     # defining a label using the ttk.Label() widget  
     header_label = ttk.Label(  
@@ -247,34 +260,13 @@ if __name__ == "__main__":
     del_button.place(x = 30, y = 160)  
     del_all_button.place(x = 30, y = 200)  
     exit_button.place(x = 30, y = 240)  
-  
-    # defining a list box using the tk.Listbox() widget  
-    task_listbox = tk.Listbox(  
-        listbox_frame,  
-        width = 39,  
-        height = 13,  
-        selectmode = 'SINGLE',  
-        background = "#FFFFFF",  
-        foreground = "#000000",  
-        selectbackground = "#CD853F",  
-        selectforeground = "#FFFFFF"  
-    )  
-    # using the place() method to place the list box in the application  
-    task_listbox.place(x = 10, y = 20)  
-  
+    
     # calling some functions  
     retrieve_database()  
     list_update()  
     # using the mainloop() method to run the application  
     guiWindow.mainloop()  
     # establishing the connection with database  
-    the_connection.commit()  
+    the_connection.commit()
+    #the_cursor.execute('drop table if exists tasks')
     the_cursor.close() 
-    
-    # Binding the on_hover function to the Enter event for listbox items
-    task_listbox.bind("<Enter>", on_hover)
-
-    # Displaying task description label
-    task_description_label = ttk.Label(listbox_frame, text="Task Description: ", font=("Consolas", "11", "bold"),
-                                        background="#FAEBD7", foreground="#000000")
-    task_description_label.place(x=10, y=350)
