@@ -11,15 +11,15 @@ def add_task():
     task_string = task_field.get()  
     due_date = due_date_entry.get()
     
-    # Open a new window for task description
-    description_window = tk.Toplevel(guiWindow)
-    description_window.title("Task Description")
-    description_window.geometry("300x150")
-    
     # checking whether the string is empty or not  
     if len(task_string) == 0:  
         # displaying a message box with 'Empty Field' message  
         messagebox.showinfo('Error', 'Field is Empty.')
+    else:
+        # Open a new window for task description
+        description_window = tk.Toplevel(guiWindow)
+        description_window.title("Task Description")
+        description_window.geometry("300x150")
 
     # Entry field for task description
     description_label = ttk.Label(description_window, text="Task Description:")
@@ -265,7 +265,8 @@ if __name__ == "__main__":
         text = "Exit",  
         width = 24,  
         command = close  
-    )  
+    ) 
+    
     # using the place() method to set the position of the buttons in the application  
     add_button.place(x = 30, y = 120)  
     del_button.place(x = 30, y = 160)  
