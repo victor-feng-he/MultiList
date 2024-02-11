@@ -16,6 +16,10 @@ def add_task():
     description_window.title("Task Description")
     description_window.geometry("300x150")
     
+    # checking whether the string is empty or not  
+    if len(task_string) == 0:  
+        # displaying a message box with 'Empty Field' message  
+        messagebox.showinfo('Error', 'Field is Empty.')
 
     # Entry field for task description
     description_label = ttk.Label(description_window, text="Task Description:")
@@ -68,22 +72,29 @@ def list_update():
         task_listbox.insert('end', f"{task[0]} {task[1]}")  
   
 # defining the function to delete a task from the list  
-def delete_task():  
-    # using the try-except method  
-    try:  
-        # getting the selected entry from the list box  
-        the_value = task_listbox.get(task_listbox.curselection())  
-        # checking if the stored value is present in the tasks list  
-        if the_value in tasks:  
-            # removing the task from the list  
-            tasks.remove(the_value)  
-            # calling the function to update the list  
-            list_update()  
-            # using the execute() method to execute a SQL statement  
-            the_cursor.execute('delete from tasks where title = ?', (the_value,))  
-    except:  
-        # displaying the message box with 'No Item Selected' message for an exception  
-        messagebox.showinfo('Error', 'No Task Selected. Cannot Delete.')        
+def delete_task():
+    selected_task_index = task_listbox.curselection()
+
+    try:
+        if selected_task_index:
+            selected_task = tasks[selected_task_index[0]]
+
+            # Display a confirmation messagebox
+            confirmation = messagebox.askyesno("Delete Task", f"Are you sure you want to delete the task:\n{selected_task[0]} {selected_task[1]} - {selected_task[2]}?")
+
+            if confirmation:
+                # Remove the task from the list
+                tasks.remove(selected_task)
+
+                # Update the database
+                the_cursor.execute('delete from tasks where title = ? and due_date = ? and description = ?', selected_task)
+
+                # Call the function to update the list
+                list_update()
+
+    except Exception as e:
+        messagebox.showinfo('Error', 'Error deleting task. Please try again.')
+        
   
 # function to delete all tasks from the list  
 def delete_all_tasks():  
