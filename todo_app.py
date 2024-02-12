@@ -1,5 +1,6 @@
 # importing the required modules  
 import re                               # importing the re module 
+from plyer import notification
 from datetime import date               # importing the date class from the datetime library
 from datetime import datetime           # importing the datetime class from the datetime library
 import tkinter as tk                    # importing the tkinter module as tk  
@@ -85,9 +86,24 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
     due_date_entry.delete(0, 'end')
     description_entry.delete(0, 'end')
     description_window.destroy()
-        
+
     # Enable the "Add Task" button after finishing adding the description
     add_button['state'] = 'normal'
+
+    # Notify the user about the task on the due date
+    notify_task_due(task_string, due_date)
+
+def notify_task_due(task_name, due_date):
+    notification_title = f"Task Reminder: {task_name}"
+    notification_message = f"Your task '{task_name}' is due today ({due_date})."
+
+    # You can customize the notification duration, toast=False for other platforms
+    notification.notify(
+        title=notification_title,
+        message=notification_message,
+        timeout=10,
+        app_icon=None  # You can provide the path to an icon if you have one
+    )
 
 # defining function to display task description when task item has been clicked on
 def show_task_description():
