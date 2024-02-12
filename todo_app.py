@@ -49,25 +49,22 @@ def add_task():
     finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date))
     finish_button.pack(pady=10)
 
-# defining the function to finishing the process of adding a task to the list with a task description
 def finish_adding_task(description_window, description_entry, task_string, due_date):
     description = description_entry.get()
-    tasks.append((task_string, due_date, description, tk.BooleanVar(value=False)))
-    the_cursor.execute('insert into tasks (title, due_date, description, completed) values (?, ?, ?, ?)',
-                           (task_string, due_date, description, False))
-    list_update()
-    task_field.delete(0, 'end')
-    due_date_entry.delete(0, 'end')
-    description_entry.delete(0, 'end')
-    description_window.destroy()
+    if len(description) == 0:
+        messagebox.showinfo('Error', 'Field is Empty.')
+    else:
+        tasks.append((task_string, due_date, description))
+        the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
+                           (task_string, due_date, description))
+        list_update()
+        task_field.delete(0, 'end')
+        due_date_entry.delete(0, 'end')
+        description_entry.delete(0, 'end')
+        description_window.destroy()
         
-    # Enable the "Add Task" button after finishing adding the description
-    add_button['state'] = 'normal'
-
-# defining function to toggle whether a task has been completed or not
-def toggle_completion(task_index):
-    tasks[task_index][3].set(not tasks[task_index][3].get())
-    list_update()
+        # Enable the "Add Task" button after finishing adding the description
+        add_button['state'] = 'normal'
 
 # defining function to display task description when task item has been clicked on
 def show_task_description():
@@ -107,18 +104,15 @@ def show_task_description():
         date_text.pack(pady=10)
         
 # defining the function to update the list  
-def list_update():
-    # calling the function to clear the list
+def list_update():  
+    # calling the function to clear the list  
     clear_list()
     # Sort tasks by due date
     sorted_tasks = sorted(tasks, key=lambda x: x[1])
-    # iterating through the strings in the list
-    for i, task in enumerate(sorted_tasks):
-        checkbox = ttk.Checkbutton(task_listbox, variable=task[3], command=lambda i=i: toggle_completion(i))
-        task_listbox.insert('end', f"{task[0]} {task[1]} {'Completed' if task[3].get() else 'Not Completed'}")
-        task_listbox.itemconfig(i, {'bg': '#FFFFFF'})  # Set default background color
-        if task[3].get():
-            task_listbox.itemconfig(i, {'bg': '#98FB98'})  # Light green background for completed tasks  
+    # iterating through the strings in the list  
+    for task in sorted_tasks:  
+        # using the insert() method to insert the tasks in the list box  
+        task_listbox.insert('end', f"{task[0]} {task[1]}")  
   
 # defining the function to delete a task from the list  
 def delete_task():
@@ -164,13 +158,6 @@ def delete_all_tasks():
 def clear_list():  
     # using the delete method to delete all entries from the list box  
     task_listbox.delete(0, 'end')  
-  
-def toggle_selected_task_completion():
-    selected_task_index = task_listbox.curselection()
-    if selected_task_index:
-        selected_task = tasks[selected_task_index[0]]
-        selected_task[3].set(not selected_task[3].get())
-        list_update()
 
 # function to close the application  
 def close():  
@@ -208,8 +195,8 @@ if __name__ == "__main__":
     # creating the cursor object of the cursor class  
     the_cursor = the_connection.cursor()  
     # using the execute() method to execute a SQL statement  
-    the_cursor.execute('drop table if exists tasks')
-    the_cursor.execute('create table if not exists tasks (title text, due_date text, description text, completed text)')  
+    #the_cursor.execute('drop table if exists tasks')
+    the_cursor.execute('create table if not exists tasks (title text, due_date text, description text)')  
   
     # defining an empty list  
     tasks = []  
@@ -333,15 +320,6 @@ if __name__ == "__main__":
         width = 24,  
         command = close  
     )
-    
-    # Create the Check/Uncheck button
-    toggle_button = ttk.Button(
-    listbox_frame,
-    text="Check/Uncheck",
-    width=40,
-    command=toggle_selected_task_completion
-    )
-    toggle_button.place(x=10, y=270)
     
     # using the place() method to set the position of the buttons in the application  
     add_button.place(x = 30, y = 120)  
