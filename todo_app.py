@@ -208,7 +208,7 @@ if __name__ == "__main__":
     # creating the cursor object of the cursor class  
     the_cursor = the_connection.cursor()  
     # using the execute() method to execute a SQL statement  
-    #the_cursor.execute('drop table if exists tasks')
+    the_cursor.execute('drop table if exists tasks')
     the_cursor.execute('create table if not exists tasks (title text, due_date text, description text, completed text)')  
   
     # defining an empty list  
