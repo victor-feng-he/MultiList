@@ -136,6 +136,45 @@ def clear_placeholder(event, entry, placeholder):
         entry.delete(0, "end")
         entry.configure(foreground="#000000")  # Set text color to black
     entry.unbind("<FocusIn>")  # Unbind the event to avoid clearing again
+    
+def open_edit_due_date_window(selected_task):
+    edit_due_date_window = tk.Toplevel(guiWindow)
+    edit_due_date_window.title("Edit Due Date")
+
+    # Create/Edit GUI for Due Date Editing
+    ttk.Label(edit_due_date_window, text="New Due Date:").pack(pady=5)
+    new_due_date_entry = ttk.Entry(edit_due_date_window, font=("Consolas", "12"), width=15)
+    new_due_date_entry.pack(pady=5)
+
+    # Set the current due date as a placeholder in the entry field
+    new_due_date_entry.insert(0, selected_task[1])
+
+    # Validate and Confirm Changes Button
+    confirm_button = ttk.Button(edit_due_date_window, text="Confirm Changes", command=lambda: confirm_due_date_edit(selected_task, new_due_date_entry, edit_due_date_window))
+    confirm_button.pack(pady=10)
+
+    # Prevent the user from prematurely closing the edit window
+    edit_due_date_window.protocol("WM_DELETE_WINDOW", lambda: None)
+
+def confirm_due_date_edit(selected_task, new_due_date_entry, edit_due_date_window):
+    new_due_date = new_due_date_entry.get()
+
+    # Validate New Due Date
+    if is_valid_date_format(new_due_date) and is_valid_date(new_due_date):
+        # Update the due date in the tasks list
+        selected_task_index = tasks.index(selected_task)
+        tasks[selected_task_index] = (selected_task[0], new_due_date, selected_task[2])
+
+        # Update the due date in the database
+        the_cursor.execute('update tasks set due_date = ? where title = ? and description = ?', (new_due_date, selected_task[0], selected_task[2]))
+
+        # Update the display in the listbox
+        list_update()
+
+        # Close the edit due date window
+        edit_due_date_window.destroy()
+    else:
+        messagebox.showinfo('Error', 'Invalid Date Format. Please enter a valid date.')
 
 # defining function to display task description when task item has been clicked on
 def show_task_description(task_title):
@@ -178,6 +217,10 @@ def show_task_description(task_title):
 
         date_text = ttk.Label(description_window, text=selected_task[1], font=("Consolas", "12"))
         date_text.pack(pady=10)
+        
+        # Add "Edit Due Date" Button
+        edit_due_date_button = ttk.Button(description_window, text="Edit Due Date", command=lambda: open_edit_due_date_window(selected_task))
+        edit_due_date_button.pack(pady=10)
         
 def set_edit_reminder(task_name, due_date):
     # Ask the user for the number of days before the due date to set or edit the reminder
