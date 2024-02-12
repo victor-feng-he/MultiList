@@ -156,7 +156,7 @@ def show_task_description(task_title):
 
         # Create a new window for task description
         description_window = tk.Toplevel(guiWindow)
-        description_window.title({task_title})
+        description_window.title(task_title)
         description_window.geometry("300x200")
 
     # Retrieve the task details from the list based on the task title
