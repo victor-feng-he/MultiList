@@ -73,14 +73,30 @@ def show_task_description():
     selected_task_index = task_listbox.curselection()
     if selected_task_index:
         selected_task = tasks[selected_task_index[0]]
+        # Retrieve task name and description of selected item
+        task_name = selected_task[0]
+        description = selected_task[2]
+
+        # Check if a window for this task description already exists
+        existing_windows = guiWindow.winfo_children()
+        for window in existing_windows:
+            if isinstance(window, tk.Toplevel) and window.title() == task_name and window.winfo_children():
+                # Assuming description label is the second child
+                description_label = window.winfo_children()[1]  
+                if description_label.cget("text") == description:
+                    # Bring the existing window to the front
+                    window.lift()
+                    return
+
+        # Create a new window for task description
         description_window = tk.Toplevel(guiWindow)
-        description_window.title("Task Description")
+        description_window.title(task_name)
         description_window.geometry("300x150")
 
         description_label = ttk.Label(description_window, text="Task Description:")
         description_label.pack(pady=5)
 
-        description_text = ttk.Label(description_window, text=selected_task[2], font=("Consolas", "12"))
+        description_text = ttk.Label(description_window, text=description, font=("Consolas", "12"))
         description_text.pack(pady=10)
         
 # defining the function to update the list  
