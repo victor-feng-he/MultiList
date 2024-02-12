@@ -3,9 +3,11 @@ import re                               # importing the re module
 from plyer import notification
 from datetime import date               # importing the date class from the datetime library
 from datetime import datetime           # importing the datetime class from the datetime library
+from datetime import timedelta
 import tkinter as tk                    # importing the tkinter module as tk  
 from tkinter import ttk                 # importing the ttk module from the tkinter library  
-from tkinter import messagebox          # importing the messagebox module from the tkinter library  
+from tkinter import messagebox          # importing the messagebox module from the tkinter library 
+from tkinter import simpledialog
 import sqlite3 as sql                   # importing the sqlite3 module as sql  
   
 # defining the function to add tasks to the list  
@@ -93,26 +95,34 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
     # Notify the user about the task on the due date
     notify_task_due(task_string, due_date)
 
-def notify_task_due(task_name, due_date):
-    notification_title = f"Task Reminder: {task_name}"
-    notification_message = f"Your task '{task_name}' is due today ({due_date})."
+def notify_task_due(task_name, due_date, days_before=0):
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    due_datetime = datetime.strptime(due_date, '%Y-%m-%d')
 
-    # You can customize the notification duration, toast=False for other platforms
-    notification.notify(
-        title=notification_title,
-        message=notification_message,
-        timeout=10,
-        app_icon=None  # You can provide the path to an icon if you have one
-    )
+    # Calculate the reminder date by subtracting the specified number of days
+    reminder_date = due_datetime - timedelta(days=days_before)
+
+    if today_date == reminder_date.strftime('%Y-%m-%d'):
+        notification_title = f"Task Reminder: {task_name}"
+        notification_message = f"Your task '{task_name}' is due in {days_before} days on {due_date}."
+
+        # You can customize the notification duration, toast=False for other platforms
+        notification.notify(
+            title=notification_title,
+            message=notification_message,
+            timeout=10,
+            app_icon=None  # You can provide the path to an icon if you have one
+        )
 
 # defining function to display task description when task item has been clicked on
 def show_task_description():
     selected_task_index = task_listbox.curselection()
     if selected_task_index:
         selected_task = tasks[selected_task_index[0]]
-        # Retrieve task name and description of selected item
+        # Retrieve task name, description, and due date of the selected item
         task_name = selected_task[0]
         description = selected_task[2]
+        due_date = selected_task[1]
 
         # Check if a window for this task description already exists
         existing_windows = guiWindow.winfo_children()
@@ -128,19 +138,30 @@ def show_task_description():
         # Create a new window for task description
         description_window = tk.Toplevel(guiWindow)
         description_window.title(task_name)
-        description_window.geometry("300x150")
+        description_window.geometry("300x200")
 
         description_label = ttk.Label(description_window, text="Task Description:")
         description_label.pack(pady=5)
 
         description_text = ttk.Label(description_window, text=description, font=("Consolas", "12"))
         description_text.pack(pady=10)
-        
+
         date_label = ttk.Label(description_window, text="Due Date:")
         date_label.pack(pady=5)
-        
+
         date_text = ttk.Label(description_window, text=due_date, font=("Consolas", "12"))
         date_text.pack(pady=10)
+
+        # Button to set or edit the reminder
+        set_reminder_button = ttk.Button(description_window, text="Set/Edit Reminder", command=lambda: set_edit_reminder(task_name, due_date))
+        set_reminder_button.pack(pady=10)
+        
+def set_edit_reminder(task_name, due_date):
+    # Ask the user for the number of days before the due date to set or edit the reminder
+    days_before = simpledialog.askinteger("Set/Edit Reminder", f"Enter the number of days before the due date for '{task_name}':", minvalue=0)
+
+    # Notify the user about the task with the specified reminder days
+    notify_task_due(task_name, due_date, days_before)
         
 # defining the function to update the list  
 def list_update():  
