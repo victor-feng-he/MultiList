@@ -129,46 +129,51 @@ def clear_placeholder(event, entry, placeholder):
     entry.unbind("<FocusIn>")  # Unbind the event to avoid clearing again
 
 # defining function to display task description when task item has been clicked on
-def show_task_description():
+def show_task_description(task_title):
     selected_task_index = task_listbox.curselection()
+    
     if selected_task_index:
-        selected_task = tasks[selected_task_index[0]]
+        selected_task = next((task for task in tasks if task[0] == task_title), None)
         # Retrieve task name, description, and due date of the selected item
-        task_name = selected_task[0]
+        task_title = selected_task[0]
         description = selected_task[2]
         due_date = selected_task[1]
 
         # Check if a window for this task description already exists
         existing_windows = guiWindow.winfo_children()
+        
         for window in existing_windows:
-            if isinstance(window, tk.Toplevel) and window.title() == task_name and window.winfo_children():
-                # Assuming description label is the second child
-                description_label = window.winfo_children()[1]  
-                if description_label.cget("text") == description:
+            # Check if the window is a Toplevel window
+            if isinstance(window, tk.Toplevel):
+                # Retrieve task name, description, and due date of the selected item
+                window_title = window.title()
+                # Extract task title from window title
+                window_task_title = window_title.split(":")[1].strip()
+                if window_task_title == task_title:
                     # Bring the existing window to the front
                     window.lift()
                     return
 
         # Create a new window for task description
         description_window = tk.Toplevel(guiWindow)
-        description_window.title(task_name)
+        description_window.title({task_title})
         description_window.geometry("300x200")
 
+    # Retrieve the task details from the list based on the task title
+    selected_task = next((task for task in tasks if task[0] == task_title), None)
+
+    if selected_task:
         description_label = ttk.Label(description_window, text="Task Description:")
         description_label.pack(pady=5)
 
-        description_text = ttk.Label(description_window, text=description, font=("Consolas", "12"))
+        description_text = ttk.Label(description_window, text=selected_task[2], font=("Consolas", "12"))
         description_text.pack(pady=10)
 
         date_label = ttk.Label(description_window, text="Due Date:")
         date_label.pack(pady=5)
 
-        date_text = ttk.Label(description_window, text=due_date, font=("Consolas", "12"))
+        date_text = ttk.Label(description_window, text=selected_task[1], font=("Consolas", "12"))
         date_text.pack(pady=10)
-
-        # Button to set or edit the reminder
-        set_reminder_button = ttk.Button(description_window, text="Set/Edit Reminder", command=lambda: set_edit_reminder(task_name, due_date))
-        set_reminder_button.pack(pady=10)
         
 def set_edit_reminder(task_name, due_date):
     # Ask the user for the number of days before the due date to set or edit the reminder
@@ -186,7 +191,7 @@ def list_update():
     # iterating through the strings in the list  
     for task in sorted_tasks:  
         # using the insert() method to insert the tasks in the list box  
-        task_listbox.insert('end', f"{task[0]} {task[1]}")  
+        task_listbox.insert('end', f"{task[0]}")  
   
 # defining the function to delete a task from the list  
 def delete_task():
@@ -309,8 +314,8 @@ if __name__ == "__main__":
     vertical_scrollbar.place(x=250, y=20, height=225)
     horizontal_scrollbar.place(x=10, y=245, width=230)  
 
-    # Binding the show_task_description function to double-click event for listbox items
-    task_listbox.bind("<Double-Button-1>", lambda event: show_task_description())
+    # Binding the show_task_description function to double-click event
+    task_listbox.bind("<Double-Button-1>", lambda event: show_task_description(task_listbox.get(task_listbox.curselection())))
       
     # defining a label using the ttk.Label() widget  
     header_label = ttk.Label(  
