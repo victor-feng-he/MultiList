@@ -24,15 +24,19 @@ def add_task():
         messagebox.showinfo('Error', 'Task Field is Empty.')
     else:
         # Check if a due date is provided and validate the format
-        if due_date:
-            if not is_valid_date_format(due_date):
-                messagebox.showinfo('Error', 'Invalid Date Format. Use YYYY-MM-DD.')
-                # return early if the date format is invalid
-                return  
-            elif not is_valid_date(due_date):
-                messagebox.showinfo('Error', 'Invalid Date. Please enter a valid date.')
-                # return early if the date format is invalid
-                return
+        if due_date != "" and not is_valid_date_format(due_date):
+            messagebox.showinfo('Error', 'Invalid Date Format. Use YYYY-MM-DD.')
+            return
+        elif due_date != "" and not is_valid_date(due_date):
+            messagebox.showinfo('Error', 'Invalid Date. Please enter a valid date.')
+            return
+
+        # If a due date is provided, ask the user for the number of days before the due date to set the reminder
+        if due_date != "":
+            days_before = simpledialog.askinteger("Set Reminder", "Enter the number of days before the due date for the reminder:", minvalue=0)
+        else:
+            # If no due date is provided, set days_before to 0
+            days_before = 0
 
         # Calculate the position for the main window
         main_window_position = guiWindow.winfo_geometry().split('+')[1:3]
@@ -63,22 +67,18 @@ def add_task():
         description_window.protocol("WM_DELETE_WINDOW", lambda: None)
 
         # Button to finish adding the task
-        finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date))
+        finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date, days_before))
         finish_button.pack(pady=10)
 
 def is_valid_date_format(date_string):
-    # Check if the date string has the format 'YYYY-MM-DD'
-    return bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string))
+    # Check if the date string is empty or has the format 'YYYY-MM-DD'
+    return date_string == "" or bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string))
 
 def is_valid_date(date_string):
-    try:
-        # Check if the date string is a valid date
-        datetime.strptime(date_string, '%Y-%m-%d')
-        return True
-    except ValueError:
-        return False
+    # Check if the date string is empty or is a valid date
+    return date_string == "" or bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string)) and datetime.strptime(date_string, '%Y-%m-%d')
 
-def finish_adding_task(description_window, description_entry, task_string, due_date):
+def finish_adding_task(description_window, description_entry, task_string, due_date, days_before):
     description = description_entry.get()
     tasks.append((task_string, due_date, description))
     the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
@@ -93,7 +93,7 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
     add_button['state'] = 'normal'
 
     # Notify the user about the task on the due date
-    notify_task_due(task_string, due_date)
+    notify_task_due(task_string, due_date, days_before)
 
 def notify_task_due(task_name, due_date, days_before=0):
     today_date = datetime.today().strftime('%Y-%m-%d')
@@ -113,6 +113,12 @@ def notify_task_due(task_name, due_date, days_before=0):
             timeout=10,
             app_icon=None  # You can provide the path to an icon if you have one
         )
+        
+def clear_placeholder(event, entry, placeholder):
+    if entry.get() == placeholder:
+        entry.delete(0, "end")
+        entry.configure(foreground="#000000")  # Set text color to black
+    entry.unbind("<FocusIn>")  # Unbind the event to avoid clearing again
 
 # defining function to display task description when task item has been clicked on
 def show_task_description():
@@ -353,8 +359,15 @@ if __name__ == "__main__":
     foreground="#A52A2A"
     )
     due_date_entry.place(x=30, y=320)
+    
+    # Update the entry fields with placeholder text
+    task_field.insert(0, "Enter task here")
+    due_date_entry.insert(0, "YYYY-MM-DD")
 
-  
+    # Bind events to handle clearing the placeholder text when the entry fields are clicked
+    task_field.bind("<FocusIn>", lambda event: clear_placeholder(event, task_field, "Enter task here"))
+    due_date_entry.bind("<FocusIn>", lambda event: clear_placeholder(event, due_date_entry, "YYYY-MM-DD"))
+
     # adding buttons to the application using the ttk.Button() widget  
     add_button = ttk.Button(  
         functions_frame,  
