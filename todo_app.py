@@ -6,7 +6,7 @@ import sqlite3 as sql                   # importing the sqlite3 module as sql
   
 # defining the function to add tasks to the list  
 def add_task():  
-    global description_entry, task_string, due_date
+    global description_entry, task_string, due_date, add_button
     # getting the string from the entry field  
     task_string = task_field.get()  
     due_date = due_date_entry.get()
@@ -16,10 +16,23 @@ def add_task():
         # displaying a message box with 'Empty Field' message  
         messagebox.showinfo('Error', 'Field is Empty.')
     else:
+        # Calculate the position for the description window
+        main_window_position = guiWindow.winfo_geometry().split('+')[1:3]
+        main_window_width = guiWindow.winfo_width()
+        main_window_height = guiWindow.winfo_height()
+
+        # Calculate the position for the description window
+        description_window_width = 300
+        description_window_height = 150
+        description_window_x = int(main_window_position[0]) + (main_window_width - description_window_width) // 2
+        description_window_y = int(main_window_position[1]) + (main_window_height - description_window_height) // 2
+
         # Open a new window for task description
         description_window = tk.Toplevel(guiWindow)
         description_window.title("Task Description")
-        description_window.geometry("300x150")
+        description_window.geometry(f"{description_window_width}x{description_window_height}+{description_window_x}+{description_window_y}")
+        # Disable the "Add Task" button after clicking
+        add_button['state'] = 'disabled'
 
     # Entry field for task description
     description_label = ttk.Label(description_window, text="Task Description:")
@@ -45,6 +58,9 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
         due_date_entry.delete(0, 'end')
         description_entry.delete(0, 'end')
         description_window.destroy()
+        
+        # Enable the "Add Task" button after finishing adding the description
+        add_button['state'] = 'normal'
 
 def show_task_description():
     selected_task_index = task_listbox.curselection()
@@ -141,9 +157,9 @@ if __name__ == "__main__":
     # setting the title of the window  
     guiWindow.title("To-Do List Manager")  
     # setting the geometry of the window  
-    guiWindow.geometry("500x450+750+250")  
+    guiWindow.geometry("550x450+750+250")  
     # disabling the resizable option  
-    guiWindow.resizable(0, 0)  
+    #guiWindow.resizable(0, 0)  
     # setting the background color to #FAEBD7  
     guiWindow.configure(bg = "#FAEBD7")  
   
@@ -178,8 +194,18 @@ if __name__ == "__main__":
         selectbackground="#CD853F",  
         selectforeground="#FFFFFF"  
     )  
-    # using the place() method to place the list box in the application  
-    task_listbox.place(x=10, y=20)  
+    
+    # Creating Scrollbars
+    vertical_scrollbar = ttk.Scrollbar(listbox_frame, orient="vertical", command=task_listbox.yview)
+    horizontal_scrollbar = ttk.Scrollbar(listbox_frame, orient="horizontal", command=task_listbox.xview)
+
+    # Configuring Listbox to use Scrollbars
+    task_listbox.config(yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
+    
+    # using the place() method to place the list box and scrollbars in the application
+    task_listbox.place(x=10, y=20)
+    vertical_scrollbar.place(x=250, y=20, height=225)
+    horizontal_scrollbar.place(x=10, y=245, width=300)  
 
     # Binding the show_task_description function to the Enter event for listbox items
     task_listbox.bind("<ButtonRelease-1>", lambda event: show_task_description())
