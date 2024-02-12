@@ -3,11 +3,11 @@ import re                               # importing the re module
 from plyer import notification
 from datetime import date               # importing the date class from the datetime library
 from datetime import datetime           # importing the datetime class from the datetime library
-from datetime import timedelta
+from datetime import timedelta          # importing the timedelta class from the datetime library
 import tkinter as tk                    # importing the tkinter module as tk  
 from tkinter import ttk                 # importing the ttk module from the tkinter library  
 from tkinter import messagebox          # importing the messagebox module from the tkinter library 
-from tkinter import simpledialog
+from tkinter import simpledialog        # importing the simpledialog module from the tkinter library
 import sqlite3 as sql                   # importing the sqlite3 module as sql  
   
 # defining the function to add tasks to the list  
@@ -31,12 +31,12 @@ def add_task():
             messagebox.showinfo('Error', 'Invalid Date. Please enter a valid date.')
             return
 
-        # If a due date is provided, ask the user for the number of days before the due date to set the reminder
-        if due_date != "":
-            days_before = simpledialog.askinteger("Set Reminder", "Enter the number of days before the due date for the reminder:", minvalue=0)
-        else:
-            # If no due date is provided, set days_before to 0
+        # If no due date is provided or placeholder text is not changed, set days_before to 0
+        if due_date == "" or due_date == "YYYY-MM-DD":
             days_before = 0
+        else:
+            # If a due date is provided, ask the user for the number of days before the due date to set the reminder
+            days_before = simpledialog.askinteger("Set Reminder", "Enter the number of days before the due date for the reminder:", minvalue=0)
 
         # Calculate the position for the main window
         main_window_position = guiWindow.winfo_geometry().split('+')[1:3]
@@ -70,13 +70,22 @@ def add_task():
         finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date, days_before))
         finish_button.pack(pady=10)
 
+# defining the function to check the validity of the format
 def is_valid_date_format(date_string):
     # Check if the date string is empty or has the format 'YYYY-MM-DD' or is equal to the placeholder text
     return date_string == "" or date_string == "YYYY-MM-DD" or bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string))
 
+# defining the function to check the validity of the date
 def is_valid_date(date_string):
-    # Check if the date string is empty, is equal to the placeholder text, or is a valid date
-    return date_string == "" or date_string == "YYYY-MM-DD" or (bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string)) and datetime.strptime(date_string, '%Y-%m-%d'))
+    # Check if the date string is empty or is a valid date and not in the past
+    if date_string == "" or date_string == "YYYY-MM-DD":
+        return True
+    try:
+        date_object = datetime.strptime(date_string, '%Y-%m-%d')
+        today_date = datetime.today().strftime('%Y-%m-%d')
+        return date_object >= datetime.strptime(today_date, '%Y-%m-%d')
+    except ValueError:
+        return False
 
 def finish_adding_task(description_window, description_entry, task_string, due_date, days_before):
     description = description_entry.get()
@@ -110,7 +119,6 @@ def notify_task_due(task_name, due_date, days_before=0):
         notification.notify(
             title=notification_title,
             message=notification_message,
-            timeout=10,
             app_icon=None  # You can provide the path to an icon if you have one
         )
         
@@ -303,11 +311,6 @@ if __name__ == "__main__":
 
     # Binding the show_task_description function to double-click event for listbox items
     task_listbox.bind("<Double-Button-1>", lambda event: show_task_description())
-
-    # Displaying task description label
-    task_description_label = ttk.Label(listbox_frame, text="Task Description: ", font=("Consolas", "11", "bold"),
-                                        background="#FAEBD7", foreground="#000000")
-    task_description_label.place(x=10, y=350)
       
     # defining a label using the ttk.Label() widget  
     header_label = ttk.Label(  
@@ -341,15 +344,6 @@ if __name__ == "__main__":
     )  
     # using the place() method to place the entry field in the application  
     task_field.place(x = 30, y = 80)
-    
-    due_date_label = ttk.Label(
-    functions_frame,
-    text="Due Date:",
-    font=("Consolas", "11", "bold"),
-    background="#FAEBD7",
-    foreground="#000000"
-    )
-    due_date_label.place(x=30, y=280)
 
     due_date_entry = ttk.Entry(
     functions_frame,
@@ -358,7 +352,9 @@ if __name__ == "__main__":
     background="#FFF8DC",
     foreground="#A52A2A"
     )
-    due_date_entry.place(x=30, y=320)
+    
+    # using the place() method to place the entry field in the application
+    due_date_entry.place(x=30, y=120)
     
     # Update the entry fields with placeholder text
     task_field.insert(0, "Enter task here")
@@ -395,10 +391,10 @@ if __name__ == "__main__":
     )
     
     # using the place() method to set the position of the buttons in the application  
-    add_button.place(x = 30, y = 120)  
-    del_button.place(x = 30, y = 160)  
-    del_all_button.place(x = 30, y = 200)  
-    exit_button.place(x = 30, y = 240)  
+    add_button.place(x = 30, y = 150)  
+    del_button.place(x = 30, y = 190)  
+    del_all_button.place(x = 30, y = 230)  
+    exit_button.place(x = 30, y = 270)  
     
     # calling some functions  
     retrieve_database()  
