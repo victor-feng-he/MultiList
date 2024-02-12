@@ -10,6 +10,9 @@ from tkinter import messagebox          # importing the messagebox module from t
 from tkinter import simpledialog        # importing the simpledialog module from the tkinter library
 import sqlite3 as sql                   # importing the sqlite3 module as sql  
   
+# Define a global list to keep track of open description windows
+open_description_windows = []
+
 # defining the function to add tasks to the list  
 def add_task():
     global description_entry, task_string, due_date, add_button
@@ -69,6 +72,9 @@ def add_task():
         # Button to finish adding the task
         finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date, days_before))
         finish_button.pack(pady=10)
+        
+    # Add the new description window to the list of open windows
+    open_description_windows.append(description_window)
 
 # defining the function to check the validity of the format
 def is_valid_date_format(date_string):
@@ -97,6 +103,9 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
     due_date_entry.delete(0, 'end')
     description_entry.delete(0, 'end')
     description_window.destroy()
+
+    # Remove the finished description window from the list of open windows
+    open_description_windows.remove(description_window)
 
     # Enable the "Add Task" button after finishing adding the description
     add_button['state'] = 'normal'
@@ -140,24 +149,18 @@ def show_task_description(task_title):
         due_date = selected_task[1]
 
         # Check if a window for this task description already exists
-        existing_windows = guiWindow.winfo_children()
+        existing_window = next((window for window in open_description_windows if window.title() == task_title), None)
         
-        for window in existing_windows:
-            # Check if the window is a Toplevel window
-            if isinstance(window, tk.Toplevel):
-                # Retrieve task name, description, and due date of the selected item
-                window_title = window.title()
-                # Extract task title from window title
-                window_task_title = window_title.split(":")[1].strip()
-                if window_task_title == task_title:
-                    # Bring the existing window to the front
-                    window.lift()
-                    return
+        if existing_window:
+            # Bring the existing window to the front
+            existing_window.lift()
+        else:
+            # Create a new window for task description
+            description_window = tk.Toplevel(guiWindow)
+            description_window.title(task_title)
+            description_window.geometry("300x200")
 
-        # Create a new window for task description
-        description_window = tk.Toplevel(guiWindow)
-        description_window.title(task_title)
-        description_window.geometry("300x200")
+            open_description_windows.append(description_window)
 
     # Retrieve the task details from the list based on the task title
     selected_task = next((task for task in tasks if task[0] == task_title), None)
