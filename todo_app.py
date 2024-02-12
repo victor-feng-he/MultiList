@@ -71,12 +71,12 @@ def add_task():
         finish_button.pack(pady=10)
 
 def is_valid_date_format(date_string):
-    # Check if the date string is empty or has the format 'YYYY-MM-DD'
-    return date_string == "" or bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string))
+    # Check if the date string is empty or has the format 'YYYY-MM-DD' or is equal to the placeholder text
+    return date_string == "" or date_string == "YYYY-MM-DD" or bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string))
 
 def is_valid_date(date_string):
-    # Check if the date string is empty or is a valid date
-    return date_string == "" or bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string)) and datetime.strptime(date_string, '%Y-%m-%d')
+    # Check if the date string is empty, is equal to the placeholder text, or is a valid date
+    return date_string == "" or date_string == "YYYY-MM-DD" or (bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string)) and datetime.strptime(date_string, '%Y-%m-%d'))
 
 def finish_adding_task(description_window, description_entry, task_string, due_date, days_before):
     description = description_entry.get()
