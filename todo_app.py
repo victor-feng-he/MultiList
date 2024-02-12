@@ -1,4 +1,5 @@
 # importing the required modules  
+from datetime import date
 import tkinter as tk                    # importing the tkinter module as tk  
 from tkinter import ttk                 # importing the ttk module from the tkinter library  
 from tkinter import messagebox          # importing the messagebox module from the tkinter library  
@@ -98,6 +99,12 @@ def show_task_description():
 
         description_text = ttk.Label(description_window, text=description, font=("Consolas", "12"))
         description_text.pack(pady=10)
+        
+        date_label = ttk.Label(description_window, text="Due Date:")
+        date_label.pack(pady=5)
+        
+        date_text = ttk.Label(description_window, text=due_date, font=("Consolas", "12"))
+        date_text.pack(pady=10)
         
 # defining the function to update the list  
 def list_update():
