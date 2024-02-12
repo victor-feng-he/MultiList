@@ -92,7 +92,7 @@ def list_update():
     # iterating through the strings in the list
     for i, task in enumerate(sorted_tasks):
         checkbox = ttk.Checkbutton(task_listbox, variable=task[3], command=lambda i=i: toggle_completion(i))
-        task_listbox.insert('end', f"{task[0]} {task[1]} {task[3]}")
+        task_listbox.insert('end', f"{task[0]} {task[1]} {'Completed' if task[3].get() else 'Not Completed'}")
         task_listbox.itemconfig(i, {'bg': '#FFFFFF'})  # Set default background color
         if task[3].get():
             task_listbox.itemconfig(i, {'bg': '#98FB98'})  # Light green background for completed tasks  
