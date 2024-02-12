@@ -31,15 +31,18 @@ def add_task():
         description_window = tk.Toplevel(guiWindow)
         description_window.title("Task Description")
         description_window.geometry(f"{description_window_width}x{description_window_height}+{description_window_x}+{description_window_y}")
+
         # Disable the "Add Task" button after clicking
         add_button['state'] = 'disabled'
 
     # Entry field for task description
     description_label = ttk.Label(description_window, text="Task Description:")
     description_label.pack(pady=5)
-    
     description_entry = ttk.Entry(description_window, font=("Consolas", "12"), width=25)
     description_entry.pack(pady=5)
+    
+    # Prevent the user from prematurely closing the description entry window
+    description_window.protocol("WM_DELETE_WINDOW", lambda: None)
     
     # Button to finish adding the task
     finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date))
@@ -48,21 +51,18 @@ def add_task():
 # defining the function to finishing the process of adding a task to the list with a task description
 def finish_adding_task(description_window, description_entry, task_string, due_date):
     description = description_entry.get()
-    if len(description) == 0:
-        messagebox.showinfo('Error', 'Field is Empty.')
-    else:
-        tasks.append((task_string, due_date, description, tk.BooleanVar(value=False)))
-        the_cursor.execute('insert into tasks (title, due_date, description, completed) values (?, ?, ?, ?)',
+    tasks.append((task_string, due_date, description, tk.BooleanVar(value=False)))
+    the_cursor.execute('insert into tasks (title, due_date, description, completed) values (?, ?, ?, ?)',
                            (task_string, due_date, description, False))
-        list_update()
-        task_field.delete(0, 'end')
-        due_date_entry.delete(0, 'end')
-        description_entry.delete(0, 'end')
-        description_window.destroy()
+    list_update()
+    task_field.delete(0, 'end')
+    due_date_entry.delete(0, 'end')
+    description_entry.delete(0, 'end')
+    description_window.destroy()
         
-        # Enable the "Add Task" button after finishing adding the description
-        add_button['state'] = 'normal'
-        
+    # Enable the "Add Task" button after finishing adding the description
+    add_button['state'] = 'normal'
+
 # defining function to toggle whether a task has been completed or not
 def toggle_completion(task_index):
     tasks[task_index][3].set(not tasks[task_index][3].get())
