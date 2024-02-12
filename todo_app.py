@@ -225,8 +225,8 @@ if __name__ == "__main__":
     vertical_scrollbar.place(x=250, y=20, height=225)
     horizontal_scrollbar.place(x=10, y=245, width=230)  
 
-    # Binding the show_task_description function to the Enter event for listbox items
-    task_listbox.bind("<ButtonRelease-1>", lambda event: show_task_description())
+    # Binding the show_task_description function to double-click event for listbox items
+    task_listbox.bind("<Double-Button-1>", lambda event: show_task_description())
 
     # Displaying task description label
     task_description_label = ttk.Label(listbox_frame, text="Task Description: ", font=("Consolas", "11", "bold"),
