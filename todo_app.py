@@ -140,18 +140,19 @@ def clear_placeholder(event, entry, placeholder):
 # defining function to display task description when task item has been clicked on
 def show_task_description(task_title):
     selected_task_index = task_listbox.curselection()
-    
+
     if selected_task_index:
         selected_task = next((task for task in tasks if task[0] == task_title), None)
+        
         # Retrieve task name, description, and due date of the selected item
         task_title = selected_task[0]
         description = selected_task[2]
         due_date = selected_task[1]
 
         # Check if a window for this task description already exists
-        existing_window = next((window for window in open_description_windows if window.title() == task_title), None)
+        existing_window = next((window for window in open_description_windows if window.winfo_exists() and window.title() == task_title), None)
         
-        if existing_window:
+        if existing_window and existing_window.winfo_exists():
             # Bring the existing window to the front
             existing_window.lift()
         else:
