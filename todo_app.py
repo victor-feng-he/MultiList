@@ -16,7 +16,7 @@ def add_task():
         # displaying a message box with 'Empty Field' message  
         messagebox.showinfo('Error', 'Field is Empty.')
     else:
-        # Calculate the position for the description window
+        # Calculate the position for the main window
         main_window_position = guiWindow.winfo_geometry().split('+')[1:3]
         main_window_width = guiWindow.winfo_width()
         main_window_height = guiWindow.winfo_height()
@@ -45,14 +45,15 @@ def add_task():
     finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date))
     finish_button.pack(pady=10)
 
+# defining the function to finishing the process of adding a task to the list with a task description
 def finish_adding_task(description_window, description_entry, task_string, due_date):
     description = description_entry.get()
     if len(description) == 0:
         messagebox.showinfo('Error', 'Field is Empty.')
     else:
-        tasks.append((task_string, due_date, description))
-        the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
-                           (task_string, due_date, description))
+        tasks.append((task_string, due_date, description, tk.BooleanVar(value=False)))
+        the_cursor.execute('insert into tasks (title, due_date, description, completed) values (?, ?, ?, ?)',
+                           (task_string, due_date, description, False))
         list_update()
         task_field.delete(0, 'end')
         due_date_entry.delete(0, 'end')
@@ -61,7 +62,13 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
         
         # Enable the "Add Task" button after finishing adding the description
         add_button['state'] = 'normal'
+        
+# defining function to toggle whether a task has been completed or not
+def toggle_completion(task_index):
+    tasks[task_index][3].set(not tasks[task_index][3].get())
+    list_update()
 
+# defining function to display task description when task item has been clicked on
 def show_task_description():
     selected_task_index = task_listbox.curselection()
     if selected_task_index:
@@ -83,9 +90,12 @@ def list_update():
     # Sort tasks by due date
     sorted_tasks = sorted(tasks, key=lambda x: x[1])
     # iterating through the strings in the list  
-    for task in sorted_tasks:  
-        # using the insert() method to insert the tasks in the list box  
-        task_listbox.insert('end', f"{task[0]} {task[1]}")  
+    for i, task in enumerate(sorted_tasks):
+        checkbox = ttk.Checkbutton(task_listbox, variable=task[3], command=lambda i=i: toggle_completion(i))
+        task_listbox.window_create('end', window=checkbox)
+        task_listbox.insert('end', f"{task[0]} {task[1]} {task[2]}")
+        if task[3].get():
+            task_listbox.itemconfig(i, {'bg': '#98FB98'})  # Light green background for completed tasks  
   
 # defining the function to delete a task from the list  
 def delete_task():
@@ -205,7 +215,7 @@ if __name__ == "__main__":
     # using the place() method to place the list box and scrollbars in the application
     task_listbox.place(x=10, y=20)
     vertical_scrollbar.place(x=250, y=20, height=225)
-    horizontal_scrollbar.place(x=10, y=245, width=300)  
+    horizontal_scrollbar.place(x=10, y=245, width=230)  
 
     # Binding the show_task_description function to the Enter event for listbox items
     task_listbox.bind("<ButtonRelease-1>", lambda event: show_task_description())
@@ -306,5 +316,5 @@ if __name__ == "__main__":
     guiWindow.mainloop()  
     # establishing the connection with database  
     the_connection.commit()
-    #the_cursor.execute('drop table if exists tasks')
+    the_cursor.execute('drop table if exists tasks')
     the_cursor.close() 
