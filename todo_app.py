@@ -142,6 +142,13 @@ def clear_list():
     # using the delete method to delete all entries from the list box  
     task_listbox.delete(0, 'end')  
   
+def toggle_selected_task_completion():
+    selected_task_index = task_listbox.curselection()
+    if selected_task_index:
+        selected_task = tasks[selected_task_index[0]]
+        selected_task[3].set(not selected_task[3].get())
+        list_update()
+
 # function to close the application  
 def close():  
     # printing the elements from the tasks list  
@@ -302,7 +309,16 @@ if __name__ == "__main__":
         text = "Exit",  
         width = 24,  
         command = close  
-    ) 
+    )
+    
+    # Create the Check/Uncheck button
+    toggle_button = ttk.Button(
+    listbox_frame,
+    text="Check/Uncheck",
+    width=40,
+    command=toggle_selected_task_completion
+    )
+    toggle_button.place(x=10, y=270)
     
     # using the place() method to set the position of the buttons in the application  
     add_button.place(x = 30, y = 120)  
