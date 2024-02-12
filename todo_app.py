@@ -93,7 +93,7 @@ def list_update():
     for i, task in enumerate(sorted_tasks):
         checkbox = ttk.Checkbutton(task_listbox, variable=task[3], command=lambda i=i: toggle_completion(i))
         task_listbox.window_create('end', window=checkbox)
-        task_listbox.insert('end', f"{task[0]} {task[1]} {task[2]}")
+        task_listbox.insert('end', f"{task[0]} {task[1]} {task[2]} {task[3]}")
         if task[3].get():
             task_listbox.itemconfig(i, {'bg': '#98FB98'})  # Light green background for completed tasks  
   
@@ -178,6 +178,7 @@ if __name__ == "__main__":
     # creating the cursor object of the cursor class  
     the_cursor = the_connection.cursor()  
     # using the execute() method to execute a SQL statement  
+    the_cursor.execute('drop table if exists tasks')
     the_cursor.execute('create table if not exists tasks (title text, due_date text, description text)')  
   
     # defining an empty list  
@@ -313,8 +314,7 @@ if __name__ == "__main__":
     retrieve_database()  
     list_update()  
     # using the mainloop() method to run the application  
-    guiWindow.mainloop()  
+    guiWindow.mainloop()
     # establishing the connection with database  
     the_connection.commit()
-    the_cursor.execute('drop table if exists tasks')
     the_cursor.close() 
