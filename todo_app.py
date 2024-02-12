@@ -1,22 +1,36 @@
 # importing the required modules  
-from datetime import date
+import re                               # importing the re module 
+from datetime import date               # importing the date class from the datetime library
+from datetime import datetime           # importing the datetime class from the datetime library
 import tkinter as tk                    # importing the tkinter module as tk  
 from tkinter import ttk                 # importing the ttk module from the tkinter library  
 from tkinter import messagebox          # importing the messagebox module from the tkinter library  
 import sqlite3 as sql                   # importing the sqlite3 module as sql  
   
 # defining the function to add tasks to the list  
-def add_task():  
+def add_task():
     global description_entry, task_string, due_date, add_button
-    # getting the string from the entry field  
-    task_string = task_field.get()  
+
+    # getting the string from the entry fields
+    task_string = task_field.get()
     due_date = due_date_entry.get()
-    
-    # checking whether the string is empty or not  
-    if len(task_string) == 0:  
-        # displaying a message box with 'Empty Field' message  
-        messagebox.showinfo('Error', 'Field is Empty.')
+
+    # checking whether the task string is empty or not
+    if len(task_string) == 0:
+        # displaying a message box with 'Empty Field' message
+        messagebox.showinfo('Error', 'Task Field is Empty.')
     else:
+        # Check if a due date is provided and validate the format
+        if due_date:
+            if not is_valid_date_format(due_date):
+                messagebox.showinfo('Error', 'Invalid Date Format. Use YYYY-MM-DD.')
+                # return early if the date format is invalid
+                return  
+            elif not is_valid_date(due_date):
+                messagebox.showinfo('Error', 'Invalid Date. Please enter a valid date.')
+                # return early if the date format is invalid
+                return
+
         # Calculate the position for the main window
         main_window_position = guiWindow.winfo_geometry().split('+')[1:3]
         main_window_width = guiWindow.winfo_width()
@@ -36,35 +50,44 @@ def add_task():
         # Disable the "Add Task" button after clicking
         add_button['state'] = 'disabled'
 
-    # Entry field for task description
-    description_label = ttk.Label(description_window, text="Task Description:")
-    description_label.pack(pady=5)
-    description_entry = ttk.Entry(description_window, font=("Consolas", "12"), width=25)
-    description_entry.pack(pady=5)
-    
-    # Prevent the user from prematurely closing the description entry window
-    description_window.protocol("WM_DELETE_WINDOW", lambda: None)
-    
-    # Button to finish adding the task
-    finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date))
-    finish_button.pack(pady=10)
+        # Entry field for task description
+        description_label = ttk.Label(description_window, text="Task Description:")
+        description_label.pack(pady=5)
+        description_entry = ttk.Entry(description_window, font=("Consolas", "12"), width=25)
+        description_entry.pack(pady=5)
+
+        # Prevent the user from prematurely closing the description entry window
+        description_window.protocol("WM_DELETE_WINDOW", lambda: None)
+
+        # Button to finish adding the task
+        finish_button = ttk.Button(description_window, text="Finish", command=lambda: finish_adding_task(description_window, description_entry, task_string, due_date))
+        finish_button.pack(pady=10)
+
+def is_valid_date_format(date_string):
+    # Check if the date string has the format 'YYYY-MM-DD'
+    return bool(re.match(r'\d{4}-\d{2}-\d{2}$', date_string))
+
+def is_valid_date(date_string):
+    try:
+        # Check if the date string is a valid date
+        datetime.strptime(date_string, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
 
 def finish_adding_task(description_window, description_entry, task_string, due_date):
     description = description_entry.get()
-    if len(description) == 0:
-        messagebox.showinfo('Error', 'Field is Empty.')
-    else:
-        tasks.append((task_string, due_date, description))
-        the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
-                           (task_string, due_date, description))
-        list_update()
-        task_field.delete(0, 'end')
-        due_date_entry.delete(0, 'end')
-        description_entry.delete(0, 'end')
-        description_window.destroy()
+    tasks.append((task_string, due_date, description))
+    the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
+                       (task_string, due_date, description))
+    list_update()
+    task_field.delete(0, 'end')
+    due_date_entry.delete(0, 'end')
+    description_entry.delete(0, 'end')
+    description_window.destroy()
         
-        # Enable the "Add Task" button after finishing adding the description
-        add_button['state'] = 'normal'
+    # Enable the "Add Task" button after finishing adding the description
+    add_button['state'] = 'normal'
 
 # defining function to display task description when task item has been clicked on
 def show_task_description():
