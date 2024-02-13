@@ -112,9 +112,9 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
     add_button['state'] = 'normal'
 
     # Notify the user about the task on the due date
-    notify_task_due(task_string, due_date, days_before)
+    notify_task_due(task_string, due_date, description, days_before)
 
-def notify_task_due(task_name, due_date, days_before=0):
+def notify_task_due(task_name, due_date, description, days_before=0):
     today_date = datetime.today().strftime('%Y-%m-%d')
     due_datetime = datetime.strptime(due_date, '%Y-%m-%d')
 
@@ -123,7 +123,7 @@ def notify_task_due(task_name, due_date, days_before=0):
 
     if today_date == reminder_date.strftime('%Y-%m-%d'):
         notification_title = f"Task Reminder: {task_name}"
-        notification_message = f"Your task '{task_name}' is due in {days_before} days on {due_date}."
+        notification_message = f"Your task '{task_name}' is due in {days_before} days on {due_date}. \n{description}"
 
         # You can customize the notification duration, toast=False for other platforms
         notification.notify(
