@@ -14,7 +14,8 @@ default_colors = {
     "header_frame": "#FAEBD7",
     "functions_frame": "#FAEBD7",
     "listbox_frame": "#FAEBD7",
-    "listbox": "#FFFFFF"
+    "listbox": "#FFFFFF",
+    "completed_task": "#98FB98"
 }
 
 # Load saved color scheme from a configuration file
@@ -137,9 +138,13 @@ def is_valid_date(date_string):
 
 def finish_adding_task(description_window, description_entry, task_string, due_date, days_before):
     description = description_entry.get()
-    tasks.append((task_string, due_date, description))
-    the_cursor.execute('insert into tasks (title, due_date, description) values (?, ?, ?)',
-                       (task_string, due_date, description))
+    completed = 0  # Set to 1 if the task is completed
+
+    task = (task_string, due_date, description, completed)
+
+    tasks.append(task)
+    the_cursor.execute('insert into tasks (title, due_date, description, completed) values (?, ?, ?, ?)',
+                       (task_string, due_date, description, completed))
     list_update()
     task_field.delete(0, 'end')
     due_date_entry.delete(0, 'end')
@@ -154,6 +159,31 @@ def finish_adding_task(description_window, description_entry, task_string, due_d
 
     # Notify the user about the task on the due date
     notify_task_due(task_string, due_date, description, days_before)
+
+# Function to toggle completion of the selected task
+def toggle_selected_task_completion():
+    selected_task_index = task_listbox.curselection()
+
+    if selected_task_index:
+        selected_task = tasks[selected_task_index[0]]
+        toggle_task_completion(selected_task[0])  # Pass the task title to the function
+
+# Function to mark/unmark a task as complete
+def toggle_task_completion(task_title):
+    selected_task_index = task_listbox.curselection()
+
+    if selected_task_index:
+        selected_task = tasks[selected_task_index[0]]
+
+        # Toggle the completion status in the tasks list
+        selected_task_index = tasks.index(selected_task)
+        tasks[selected_task_index] = (selected_task[0], selected_task[1], selected_task[2], not selected_task[3])
+
+        # Update the completion status in the database
+        the_cursor.execute('update tasks set completed = ? where title = ? and description = ?', (int(not selected_task[3]), selected_task[0], selected_task[2]))
+
+        # Update the display in the listbox
+        list_update()
 
 def notify_task_due(task_name, due_date, description, days_before=0):
     today_date = datetime.today().strftime('%Y-%m-%d')
@@ -205,7 +235,7 @@ def confirm_due_date_edit(selected_task, new_due_date_entry, edit_due_date_windo
     if is_valid_date_format(new_due_date) and is_valid_date(new_due_date):
         # Update the due date in the tasks list
         selected_task_index = tasks.index(selected_task)
-        tasks[selected_task_index] = (selected_task[0], new_due_date, selected_task[2])
+        tasks[selected_task_index] = (selected_task[0], new_due_date, selected_task[2], selected_task[3])
 
         # Update the due date in the database
         the_cursor.execute('update tasks set due_date = ? where title = ? and description = ?', (new_due_date, selected_task[0], selected_task[2]))
@@ -263,6 +293,11 @@ def show_task_description(task_title):
         # Add "Edit Due Date" Button
         edit_due_date_button = ttk.Button(description_window, text="Edit Due Date", command=lambda: open_edit_due_date_window(selected_task))
         edit_due_date_button.pack(pady=10)
+
+        # Add "Toggle Completion" Button
+        completion_button_text = "Mark as Complete" if not selected_task[3] else "Mark as Incomplete"
+        completion_button = ttk.Button(description_window, text=completion_button_text, command=lambda: toggle_task_completion(selected_task[0]))
+        completion_button.pack(pady=10)
         
 def set_edit_reminder(task_name, due_date):
     # Ask the user for the number of days before the due date to set or edit the reminder
@@ -272,15 +307,20 @@ def set_edit_reminder(task_name, due_date):
     notify_task_due(task_name, due_date, days_before)
         
 # defining the function to update the list  
-def list_update():  
-    # calling the function to clear the list  
+def list_update():
+    # Clear listbox
     clear_list()
+
     # Sort tasks by due date
     sorted_tasks = sorted(tasks, key=lambda x: x[1])
-    # iterating through the strings in the list  
-    for task in sorted_tasks:  
-        # using the insert() method to insert the tasks in the list box  
-        task_listbox.insert('end', f"{task[0]}")  
+
+    for i, task in enumerate(sorted_tasks):
+        task_title = f"{task[0]}"
+        background_color = default_colors["completed_task"] if task[3] else default_colors["listbox"]
+        task_listbox.insert('end', task_title)
+
+        # Apply background color to items using tags
+        task_listbox.itemconfig('end', {'bg': background_color}) 
   
 # defining the function to delete a task from the list  
 def delete_task():
@@ -341,9 +381,9 @@ def retrieve_database():
         # using the pop() method to pop out the elements from the list  
         tasks.pop()  
     # iterating through the rows in the database table  
-    for row in the_cursor.execute('select title, due_date, description from tasks'):  
+    for row in the_cursor.execute('select title, due_date, description, completed from tasks'):  
         # using the append() method to insert the titles from the table in the list  
-        tasks.append((row[0], row[1], row[2])) 
+        tasks.append((row[0], row[1], row[2], row[3])) 
 
 # Initialize main window
 guiWindow = tk.Tk()
@@ -357,7 +397,8 @@ guiWindow.configure(bg=color_scheme["header_frame"])
 # Initialize connection to the database
 the_connection = sql.connect('listOfTasks.db')
 the_cursor = the_connection.cursor()
-the_cursor.execute('create table if not exists tasks (title text, due_date text, description text)')
+#the_cursor.execute('drop table if exists tasks')
+the_cursor.execute('create table if not exists tasks (title text, due_date text, description text, completed INTEGER DEFAULT 0)')
 
 # Define an empty list for tasks
 tasks = []
@@ -378,7 +419,7 @@ task_listbox = tk.Listbox(
     width=39,
     height=13,
     font=("Arial", 12),
-    selectmode=tk.MULTIPLE,
+    selectmode=tk.SINGLE,
     background=color_scheme["listbox"],
     foreground="#000000",
     selectbackground="#CD853F",
@@ -394,8 +435,8 @@ task_listbox.config(yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizo
 
 # Pack Listbox and Scrollbars
 task_listbox.place(x=10, y=20)
-vertical_scrollbar.place(x=250, y=20, height=225)
-horizontal_scrollbar.place(x=10, y=245, width=230)
+vertical_scrollbar.place(x=370, y=20, height=225)
+horizontal_scrollbar.place(x=10, y=275, width=230)
 
 # Bind the show_task_description function to double-click event
 task_listbox.bind("<Double-Button-1>", lambda event: show_task_description(task_listbox.get(task_listbox.curselection())))
@@ -434,6 +475,12 @@ add_button = ttk.Button(
     text="Add Task",
     width=24,
     command=add_task
+)
+toggle_task_completion_button = ttk.Button(
+    listbox_frame,
+    text="Complete/Incomplete",
+    width = 24,
+    command = toggle_selected_task_completion
 )
 del_button = ttk.Button(  
     functions_frame,  
@@ -484,6 +531,7 @@ task_label.place(x=30, y=40)
 task_field.place(x=30, y=80)
 due_date_entry.place(x=30, y=120)
 add_button.place(x=30, y=150)
+toggle_task_completion_button.place(x=10, y=300)
 del_button.place(x=30, y=190)
 del_all_button.place(x=30, y=230)
 color_picker_button_header_frame.place(x=30, y=270)
