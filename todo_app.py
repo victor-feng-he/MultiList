@@ -1,18 +1,59 @@
-# importing the required modules  
-import re                               # importing the re module 
+import re
+import tkinter as tk
+from tkinter import ttk, messagebox, simpledialog, colorchooser
+from datetime import datetime, timedelta
 from plyer import notification
-from datetime import date               # importing the date class from the datetime library
-from datetime import datetime           # importing the datetime class from the datetime library
-from datetime import timedelta          # importing the timedelta class from the datetime library
-import tkinter as tk                    # importing the tkinter module as tk  
-from tkinter import ttk                 # importing the ttk module from the tkinter library  
-from tkinter import messagebox          # importing the messagebox module from the tkinter library 
-from tkinter import simpledialog        # importing the simpledialog module from the tkinter library
-from tkinter import colorchooser
-import sqlite3 as sql                   # importing the sqlite3 module as sql  
-  
+import sqlite3 as sql
+import json
+
 # Define a global list to keep track of open description windows
 open_description_windows = []
+
+# Define default color values
+default_colors = {
+    "header_frame": "#FAEBD7",
+    "functions_frame": "#FAEBD7",
+    "listbox_frame": "#FAEBD7",
+    "listbox": "#FFFFFF"
+}
+
+# Load saved color scheme from a configuration file
+def load_color_scheme():
+    try:
+        with open("color_scheme.json", "r") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        return default_colors
+
+# Save color scheme to a configuration file
+def save_color_scheme(color_scheme):
+    with open("color_scheme.json", "w") as file:
+        json.dump(color_scheme, file)
+
+# Set initial color scheme
+color_scheme = load_color_scheme()
+
+# Function to choose color and update widget background
+def choose_color(widget_name):
+    global color_scheme
+    _, color = colorchooser.askcolor(color_scheme[widget_name])
+    if color:
+        color_scheme[widget_name] = color
+        widget = widget_mapping[widget_name]
+        widget.configure(bg=color)
+        save_color_scheme(color_scheme)
+
+def reset_all_colors_to_default():
+    global color_scheme
+    for widget_name, default_color in default_colors.items():
+        color_scheme[widget_name] = default_color
+        widget = widget_mapping[widget_name]
+        widget.configure(bg=default_color)
+    save_color_scheme(color_scheme)
+
+# Function to apply the current color scheme
+def apply_color_scheme():
+    guiWindow.tk_setPalette(background=color_scheme["header_frame"])
 
 # defining the function to add tasks to the list  
 def add_task():
@@ -302,205 +343,179 @@ def retrieve_database():
     # iterating through the rows in the database table  
     for row in the_cursor.execute('select title, due_date, description from tasks'):  
         # using the append() method to insert the titles from the table in the list  
-        tasks.append((row[0], row[1], row[2]))  
-        
-# Function to open color picker and update the background color
-def choose_color(widget):
-    _, color = colorchooser.askcolor()  # This returns a tuple, we're interested in the second element which is the color
-    if color:
-        widget.configure(bg=color)
+        tasks.append((row[0], row[1], row[2])) 
 
-# main function  
-if __name__ == "__main__":  
-    # creating an object of the Tk() class  
-    guiWindow = tk.Tk()  
-    # setting the title of the window  
-    guiWindow.title("To-Do List Manager")  
-    # setting the geometry of the window  
-    guiWindow.geometry("550x450+750+250")  
-    # disabling the resizable option  
-    #guiWindow.resizable(0, 0)  
-    # setting the background color to #FAEBD7  
-    guiWindow.configure(bg = "#FAEBD7")  
-  
-    # using the connect() method to connect to the database  
-    the_connection = sql.connect('listOfTasks.db')  
-    # creating the cursor object of the cursor class  
-    the_cursor = the_connection.cursor()  
-    # using the execute() method to execute a SQL statement  
-    #the_cursor.execute('drop table if exists tasks')
-    the_cursor.execute('create table if not exists tasks (title text, due_date text, description text)')  
-  
-    # defining an empty list  
-    tasks = []  
-      
-    # defining frames using the tk.Frame() widget  
-    header_frame = tk.Frame(guiWindow, bg = "#FAEBD7")  
-    functions_frame = tk.Frame(guiWindow, bg = "#FAEBD7")  
-    listbox_frame = tk.Frame(guiWindow, bg = "#FAEBD7")  
-  
-    # using the pack() method to place the frames in the application  
-    header_frame.pack(fill = "both")  
-    functions_frame.pack(side = "left", expand = True, fill = "both")  
-    listbox_frame.pack(side = "right", expand = True, fill = "both")
-    
-    # defining a list box using the tk.Listbox() widget  
-    task_listbox = tk.Listbox(  
-        listbox_frame,  
-        width=39,  
-        height=13,  
-        selectmode='SINGLE',  
-        background="#FFFFFF",  
-        foreground="#000000",  
-        selectbackground="#CD853F",  
-        selectforeground="#FFFFFF"  
-    )  
-    
-    # Creating Scrollbars
-    vertical_scrollbar = ttk.Scrollbar(listbox_frame, orient="vertical", command=task_listbox.yview)
-    horizontal_scrollbar = ttk.Scrollbar(listbox_frame, orient="horizontal", command=task_listbox.xview)
+# Initialize main window
+guiWindow = tk.Tk()
+guiWindow.title("To-Do List Manager")
+guiWindow.geometry("550x550+750+250")
+#guiWindow.resizable(0, 0)
 
-    # Configuring Listbox to use Scrollbars
-    task_listbox.config(yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
-    
-    # using the place() method to place the list box and scrollbars in the application
-    task_listbox.place(x=10, y=20)
-    vertical_scrollbar.place(x=250, y=20, height=225)
-    horizontal_scrollbar.place(x=10, y=245, width=230)  
+# Set color scheme for main window
+guiWindow.configure(bg=color_scheme["header_frame"])
 
-    # Binding the show_task_description function to double-click event
-    task_listbox.bind("<Double-Button-1>", lambda event: show_task_description(task_listbox.get(task_listbox.curselection())))
-      
-    # defining a label using the ttk.Label() widget  
-    header_label = ttk.Label(  
-        header_frame,  
-        text = "The To-Do List",  
-        font = ("Brush Script MT", "30"),  
-        background = "#FAEBD7",  
-        foreground = "#8B4513"  
-    )  
-    # using the pack() method to place the label in the application  
-    header_label.pack(padx = 20, pady = 20)  
-  
-    # defining another label using the ttk.Label() widget  
-    task_label = ttk.Label(  
-        functions_frame,  
-        text = "Enter the Task:",  
-        font = ("Consolas", "11", "bold"),  
-        background = "#FAEBD7",  
-        foreground = "#000000"  
-    )  
-    # using the place() method to place the label in the application  
-    task_label.place(x = 30, y = 40)  
-      
-    # defining an entry field using the ttk.Entry() widget  
-    task_field = ttk.Entry(  
-        functions_frame,  
-        font = ("Consolas", "12"),  
-        width = 18,  
-        background = "#FFF8DC",  
-        foreground = "#A52A2A"  
-    )  
-    # using the place() method to place the entry field in the application  
-    task_field.place(x = 30, y = 80)
+# Initialize connection to the database
+the_connection = sql.connect('listOfTasks.db')
+the_cursor = the_connection.cursor()
+the_cursor.execute('create table if not exists tasks (title text, due_date text, description text)')
 
-    due_date_entry = ttk.Entry(
+# Define an empty list for tasks
+tasks = []
+
+# Define frames
+header_frame = tk.Frame(guiWindow, bg=color_scheme["header_frame"])
+functions_frame = tk.Frame(guiWindow, bg=color_scheme["functions_frame"])
+listbox_frame = tk.Frame(guiWindow, bg=color_scheme["listbox_frame"])
+
+# Pack frames
+header_frame.pack(fill="both")
+functions_frame.pack(side="left", expand=True, fill="both")
+listbox_frame.pack(side="right", expand=True, fill="both")
+
+# Create a listbox to display tasks
+task_listbox = tk.Listbox(
+    listbox_frame,
+    width=39,
+    height=13,
+    font=("Arial", 12),
+    selectmode=tk.MULTIPLE,
+    background=color_scheme["listbox"],
+    foreground="#000000",
+    selectbackground="#CD853F",
+    selectforeground="#FFFFFF"
+)
+
+# Create Scrollbars
+vertical_scrollbar = ttk.Scrollbar(listbox_frame, orient="vertical", command=task_listbox.yview)
+horizontal_scrollbar = ttk.Scrollbar(listbox_frame, orient="horizontal", command=task_listbox.xview)
+
+# Configure Listbox to use Scrollbars
+task_listbox.config(yscrollcommand=vertical_scrollbar.set, xscrollcommand=horizontal_scrollbar.set)
+
+# Pack Listbox and Scrollbars
+task_listbox.place(x=10, y=20)
+vertical_scrollbar.place(x=250, y=20, height=225)
+horizontal_scrollbar.place(x=10, y=245, width=230)
+
+# Bind the show_task_description function to double-click event
+task_listbox.bind("<Double-Button-1>", lambda event: show_task_description(task_listbox.get(task_listbox.curselection())))
+
+# Define labels, entry fields, and buttons
+header_label = ttk.Label(
+    header_frame,
+    text="The To-Do List",
+    font=("Brush Script MT", "30"),
+    background=color_scheme["header_frame"],
+    foreground="#8B4513"
+)
+task_label = ttk.Label(
+    functions_frame,
+    text="Enter the Task:",
+    font=("Consolas", "11", "bold"),
+    background=color_scheme["functions_frame"],
+    foreground="#000000"
+)
+task_field = ttk.Entry(
     functions_frame,
     font=("Consolas", "12"),
     width=18,
     background="#FFF8DC",
     foreground="#A52A2A"
-    )
-    
-    # using the place() method to place the entry field in the application
-    due_date_entry.place(x=30, y=120)
-    
-    # Update the entry fields with placeholder text
-    task_field.insert(0, "Enter task here")
-    due_date_entry.insert(0, "YYYY-MM-DD")
+)
+due_date_entry = ttk.Entry(
+    functions_frame,
+    font=("Consolas", "12"),
+    width=18,
+    background="#FFF8DC",
+    foreground="#A52A2A"
+)
+add_button = ttk.Button(
+    functions_frame,
+    text="Add Task",
+    width=24,
+    command=add_task
+)
+del_button = ttk.Button(  
+    functions_frame,  
+    text = "Delete Task",  
+    width = 24,  
+    command = delete_task  
+)
+del_all_button = ttk.Button(  
+    functions_frame,  
+    text = "Delete All Tasks",  
+    width = 24,  
+    command = delete_all_tasks  
+)
+color_picker_button_header_frame = ttk.Button(
+    functions_frame,
+    text="Pick Header Frame Color",
+    width=24,
+    command=lambda: choose_color("header_frame")
+)
+color_picker_button_functions_frame = ttk.Button(
+    functions_frame,
+    text="Pick Functions Frame Color",
+    width=24,
+    command=lambda: choose_color("functions_frame")
+)
+color_picker_button_listbox_frame = ttk.Button(
+    functions_frame,
+    text="Pick Listbox Frame Color",
+    width=24,
+    command=lambda: choose_color("listbox_frame")
+)
+reset_color_button_functions_frame = ttk.Button(
+    functions_frame,
+    text="Reset to Default",
+    width=24,
+    command=reset_all_colors_to_default
+)
+exit_button = ttk.Button(
+    functions_frame,
+    text="Exit",
+    width=24,
+    command=guiWindow.destroy
+)
 
-    # Bind events to handle clearing the placeholder text when the entry fields are clicked
-    task_field.bind("<FocusIn>", lambda event: clear_placeholder(event, task_field, "Enter task here"))
-    due_date_entry.bind("<FocusIn>", lambda event: clear_placeholder(event, due_date_entry, "YYYY-MM-DD"))
+# place
+header_label.pack(padx=20, pady=20)
+task_label.place(x=30, y=40)
+task_field.place(x=30, y=80)
+due_date_entry.place(x=30, y=120)
+add_button.place(x=30, y=150)
+del_button.place(x=30, y=190)
+del_all_button.place(x=30, y=230)
+color_picker_button_header_frame.place(x=30, y=270)
+color_picker_button_functions_frame.place(x=30, y=310)
+color_picker_button_listbox_frame.place(x=30, y=350)
+reset_color_button_functions_frame.place(x=30, y=390)
+exit_button.place(x=30, y=430)
 
-    # adding buttons to the application using the ttk.Button() widget  
-    add_button = ttk.Button(  
-        functions_frame,  
-        text = "Add Task",  
-        width = 24,  
-        command = add_task  
-    )  
-    del_button = ttk.Button(  
-        functions_frame,  
-        text = "Delete Task",  
-        width = 24,  
-        command = delete_task  
-    )  
-    del_all_button = ttk.Button(  
-        functions_frame,  
-        text = "Delete All Tasks",  
-        width = 24,  
-        command = delete_all_tasks  
-    )  
-    exit_button = ttk.Button(  
-        functions_frame,  
-        text = "Exit",  
-        width = 24,  
-        command = close  
-    )
-    # Create a frame to group color picker buttons
-    color_picker_frame = ttk.Frame(functions_frame, style="ColorPicker.TFrame")
-    color_picker_frame.place(x=30, y=300)
+# Update the entry fields with placeholder text
+task_field.insert(0, "Enter task here")
+due_date_entry.insert(0, "YYYY-MM-DD")
 
-    # Configure a custom style for the color_picker_frame
-    guiWindow.tk_setPalette(background="#FAEBD7")  # Set the background color of the application
-    guiWindow.style = ttk.Style()
-    guiWindow.style.configure("ColorPicker.TFrame", background="#FAEBD7")
+# Bind events to handle clearing the placeholder text when the entry fields are clicked
+task_field.bind("<FocusIn>", lambda event: clear_placeholder(event, task_field, "Enter task here"))
+due_date_entry.bind("<FocusIn>", lambda event: clear_placeholder(event, due_date_entry, "YYYY-MM-DD"))
 
-    # Add color picker buttons to the color_picker_frame
-    color_picker_button_header_frame = ttk.Button(
-        color_picker_frame,
-        text="Pick Header Frame Color",
-        width=24,
-        command=lambda: choose_color(header_frame)
-    )
-    color_picker_button_header_frame.grid(row=0, column=0, pady=5)
+# Create a dictionary to map widget names to actual widget objects
+widget_mapping = {
+    "functions_frame": functions_frame,
+    "listbox_frame": listbox_frame,
+    "listbox": task_listbox,
+    "header_frame": header_frame
+}
 
-    color_picker_button_functions_frame = ttk.Button(
-        color_picker_frame,
-        text="Pick Functions Frame Color",
-        width=24,
-        command=lambda: choose_color(functions_frame)
-    )
-    color_picker_button_functions_frame.grid(row=1, column=0, pady=5)
+# Apply initial color scheme
+apply_color_scheme()
 
-    color_picker_button_listbox_frame = ttk.Button(
-        color_picker_frame,
-        text="Pick Listbox Frame Color",
-        width=24,
-        command=lambda: choose_color(listbox_frame)
-    )
-    color_picker_button_listbox_frame.grid(row=2, column=0, pady=5)
-
-    color_picker_button_listbox = ttk.Button(
-        color_picker_frame,
-        text="Pick Listbox Color",
-        width=24,
-        command=lambda: choose_color(task_listbox)
-    )
-    color_picker_button_listbox.grid(row=3, column=0, pady=5)
-    
-    # using the place() method to set the position of the buttons in the application  
-    add_button.place(x = 30, y = 150)  
-    del_button.place(x = 30, y = 190)  
-    del_all_button.place(x = 30, y = 230)  
-    exit_button.place(x = 30, y = 270)  
-    
-    # calling some functions  
-    retrieve_database()  
-    list_update()  
-    # using the mainloop() method to run the application  
-    guiWindow.mainloop()
-    # establishing the connection with database  
-    the_connection.commit()
-    the_cursor.close()
+# Get access to database on startup
+retrieve_database()
+# Call list_update to load tasks on startup
+list_update()
+# Run the main loop
+guiWindow.mainloop()
+the_connection.commit()
+the_cursor.close()
