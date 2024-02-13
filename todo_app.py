@@ -8,6 +8,7 @@ import tkinter as tk                    # importing the tkinter module as tk
 from tkinter import ttk                 # importing the ttk module from the tkinter library  
 from tkinter import messagebox          # importing the messagebox module from the tkinter library 
 from tkinter import simpledialog        # importing the simpledialog module from the tkinter library
+from tkinter import colorchooser
 import sqlite3 as sql                   # importing the sqlite3 module as sql  
   
 # Define a global list to keep track of open description windows
@@ -302,6 +303,12 @@ def retrieve_database():
     for row in the_cursor.execute('select title, due_date, description from tasks'):  
         # using the append() method to insert the titles from the table in the list  
         tasks.append((row[0], row[1], row[2]))  
+        
+# Function to open color picker and update the background color
+def choose_color(widget):
+    _, color = colorchooser.askcolor()  # This returns a tuple, we're interested in the second element which is the color
+    if color:
+        widget.configure(bg=color)
 
 # main function  
 if __name__ == "__main__":  
@@ -441,6 +448,47 @@ if __name__ == "__main__":
         width = 24,  
         command = close  
     )
+    # Create a frame to group color picker buttons
+    color_picker_frame = ttk.Frame(functions_frame, style="ColorPicker.TFrame")
+    color_picker_frame.place(x=30, y=300)
+
+    # Configure a custom style for the color_picker_frame
+    guiWindow.tk_setPalette(background="#FAEBD7")  # Set the background color of the application
+    guiWindow.style = ttk.Style()
+    guiWindow.style.configure("ColorPicker.TFrame", background="#FAEBD7")
+
+    # Add color picker buttons to the color_picker_frame
+    color_picker_button_header_frame = ttk.Button(
+        color_picker_frame,
+        text="Pick Header Frame Color",
+        width=24,
+        command=lambda: choose_color(header_frame)
+    )
+    color_picker_button_header_frame.grid(row=0, column=0, pady=5)
+
+    color_picker_button_functions_frame = ttk.Button(
+        color_picker_frame,
+        text="Pick Functions Frame Color",
+        width=24,
+        command=lambda: choose_color(functions_frame)
+    )
+    color_picker_button_functions_frame.grid(row=1, column=0, pady=5)
+
+    color_picker_button_listbox_frame = ttk.Button(
+        color_picker_frame,
+        text="Pick Listbox Frame Color",
+        width=24,
+        command=lambda: choose_color(listbox_frame)
+    )
+    color_picker_button_listbox_frame.grid(row=2, column=0, pady=5)
+
+    color_picker_button_listbox = ttk.Button(
+        color_picker_frame,
+        text="Pick Listbox Color",
+        width=24,
+        command=lambda: choose_color(task_listbox)
+    )
+    color_picker_button_listbox.grid(row=3, column=0, pady=5)
     
     # using the place() method to set the position of the buttons in the application  
     add_button.place(x = 30, y = 150)  
@@ -455,4 +503,4 @@ if __name__ == "__main__":
     guiWindow.mainloop()
     # establishing the connection with database  
     the_connection.commit()
-    the_cursor.close() 
+    the_cursor.close()
