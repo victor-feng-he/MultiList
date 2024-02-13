@@ -317,9 +317,9 @@ if __name__ == "__main__":
     # setting the title of the window  
     guiWindow.title("To-Do List Manager")  
     # setting the geometry of the window  
-    guiWindow.geometry("550x550+750+250")  
+    guiWindow.geometry("550x450+750+250")  
     # disabling the resizable option  
-    guiWindow.resizable(0, 0)  
+    #guiWindow.resizable(0, 0)  
     # setting the background color to #FAEBD7  
     guiWindow.configure(bg = "#FAEBD7")  
   
