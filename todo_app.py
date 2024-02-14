@@ -302,9 +302,6 @@ def show_task_description(task_title):
         # Bind the context menu for right-click
         description_text.bind("<Button-3>", lambda event: show_context_menu(event, description_text))
 
-    # Allow text selection in the description_text label
-    description_text.bind("<Enter>", lambda event: description_text.focus_set())
-
 def show_context_menu(event, widget):
     context_menu = tk.Menu(widget, tearoff=0)
     context_menu.add_command(label="Copy", command=lambda: copy_text(widget))
