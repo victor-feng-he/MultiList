@@ -204,42 +204,6 @@ def notify_task_due(task_name, due_date, description, days_before=0):
             message=notification_message,
             app_icon=None  # You can provide the path to an icon if you have one
         )
-
-def notify_task_due(task_name, due_date, description, days_before=0):
-    today_date = datetime.today().strftime('%Y-%m-%d')
-    due_datetime = datetime.strptime(due_date, '%Y-%m-%d')
-
-    # Calculate the reminder date by subtracting the specified number of days
-    reminder_date = due_datetime - timedelta(days=days_before)
-
-    if today_date == reminder_date.strftime('%Y-%m-%d'):
-        notification_title = f"Task Reminder: {task_name}"
-        notification_message = f"Your task '{task_name}' is due in {days_before} days on {due_date}.\n {description}"
-
-        # You can customize the notification duration, toast=False for other platforms
-        notification.notify(
-            title=notification_title,
-            message=notification_message,
-            app_icon=None  # You can provide the path to an icon if you have one
-        )
-
-def check_and_notify():
-    # Logic to check for upcoming tasks and send notifications
-    for task in tasks:
-        task_name, due_date, description, _ = task
-        notify_task_due(task_name, due_date, description, days_before=1)  # Adjust days_before as needed
-
-def notification_handler():
-    # Schedule notification checks
-    schedule.every(1).minutes.do(check_and_notify)
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-
-def start_notification_process():
-    notification_process = multiprocessing.Process(target=notification_handler)
-    notification_process.start()
         
 def clear_placeholder(event, entry, placeholder):
     if entry.get() == placeholder:
@@ -623,8 +587,6 @@ apply_color_scheme()
 retrieve_database()
 # Call list_update to load tasks on startup
 list_update()
-# Start the notification process
-start_notification_process()
 # Run the main loop
 guiWindow.mainloop()
 the_connection.commit()
