@@ -298,6 +298,28 @@ def show_task_description(task_title):
         completion_button_text = "Mark as Complete" if not selected_task[3] else "Mark as Incomplete"
         completion_button = ttk.Button(description_window, text=completion_button_text, command=lambda: toggle_task_completion(selected_task[0]))
         completion_button.pack(pady=10)
+
+        # Bind the context menu for right-click
+        description_text.bind("<Button-3>", lambda event: show_context_menu(event, description_text))
+
+    # Allow text selection in the description_text label
+    description_text.bind("<Enter>", lambda event: description_text.focus_set())
+
+def show_context_menu(event, widget):
+    context_menu = tk.Menu(widget, tearoff=0)
+    context_menu.add_command(label="Copy", command=lambda: copy_text(widget))
+
+    context_menu.post(event.x_root, event.y_root)
+
+def copy_text(widget):
+    if isinstance(widget, tk.Text):
+        selected_text = widget.get(tk.SEL_FIRST, tk.SEL_LAST)
+        guiWindow.clipboard_clear()
+        guiWindow.clipboard_append(selected_text)
+    elif isinstance(widget, ttk.Label):
+        selected_text = widget.cget("text")
+        guiWindow.clipboard_clear()
+        guiWindow.clipboard_append(selected_text)
         
 def set_edit_reminder(task_name, due_date):
     # Ask the user for the number of days before the due date to set or edit the reminder
