@@ -15,7 +15,6 @@ default_colors = {
     "functions_frame": "#FAEBD7",
     "listbox_frame": "#FAEBD7",
     "listbox": "#FFFFFF",
-    "completed_task": "#98FB98"
 }
 
 # Load saved color scheme from a configuration file
@@ -47,9 +46,12 @@ def choose_color(widget_name):
 def reset_all_colors_to_default():
     global color_scheme
     for widget_name, default_color in default_colors.items():
-        color_scheme[widget_name] = default_color
-        widget = widget_mapping[widget_name]
-        widget.configure(bg=default_color)
+        try:
+            color_scheme[widget_name] = default_color
+            widget = widget_mapping[widget_name]
+            widget.configure(bg=default_color)
+        except KeyError:
+            print(f"KeyError: Widget '{widget_name}' not found in widget_mapping dictionary.")
     save_color_scheme(color_scheme)
 
 # Function to apply the current color scheme
@@ -165,15 +167,15 @@ def toggle_selected_task_completion():
     selected_task_index = task_listbox.curselection()
 
     if selected_task_index:
-        selected_task = tasks[selected_task_index[0]]
-        toggle_task_completion(selected_task[0])  # Pass the task title to the function
+        selected_task = task_listbox.get([selected_task_index[0]])
+        toggle_task_completion(selected_task)  # Pass the task title to the function
 
 # Function to mark/unmark a task as complete
 def toggle_task_completion(task_title):
     selected_task_index = task_listbox.curselection()
 
     if selected_task_index:
-        selected_task = tasks[selected_task_index[0]]
+        selected_task = next((task for task in tasks if task[0] == task_title), None)
 
         # Toggle the completion status in the tasks list
         selected_task_index = tasks.index(selected_task)
@@ -202,6 +204,42 @@ def notify_task_due(task_name, due_date, description, days_before=0):
             message=notification_message,
             app_icon=None  # You can provide the path to an icon if you have one
         )
+
+def notify_task_due(task_name, due_date, description, days_before=0):
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    due_datetime = datetime.strptime(due_date, '%Y-%m-%d')
+
+    # Calculate the reminder date by subtracting the specified number of days
+    reminder_date = due_datetime - timedelta(days=days_before)
+
+    if today_date == reminder_date.strftime('%Y-%m-%d'):
+        notification_title = f"Task Reminder: {task_name}"
+        notification_message = f"Your task '{task_name}' is due in {days_before} days on {due_date}.\n {description}"
+
+        # You can customize the notification duration, toast=False for other platforms
+        notification.notify(
+            title=notification_title,
+            message=notification_message,
+            app_icon=None  # You can provide the path to an icon if you have one
+        )
+
+def check_and_notify():
+    # Logic to check for upcoming tasks and send notifications
+    for task in tasks:
+        task_name, due_date, description, _ = task
+        notify_task_due(task_name, due_date, description, days_before=1)  # Adjust days_before as needed
+
+def notification_handler():
+    # Schedule notification checks
+    schedule.every(1).minutes.do(check_and_notify)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
+def start_notification_process():
+    notification_process = multiprocessing.Process(target=notification_handler)
+    notification_process.start()
         
 def clear_placeholder(event, entry, placeholder):
     if entry.get() == placeholder:
@@ -335,7 +373,7 @@ def list_update():
 
     for i, task in enumerate(sorted_tasks):
         task_title = f"{task[0]}"
-        background_color = default_colors["completed_task"] if task[3] else default_colors["listbox"]
+        background_color = "#98FB98" if task[3] else "#FFFFFF"
         task_listbox.insert('end', task_title)
 
         # Apply background color to items using tags
@@ -585,6 +623,8 @@ apply_color_scheme()
 retrieve_database()
 # Call list_update to load tasks on startup
 list_update()
+# Start the notification process
+start_notification_process()
 # Run the main loop
 guiWindow.mainloop()
 the_connection.commit()
