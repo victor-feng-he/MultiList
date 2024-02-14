@@ -328,7 +328,10 @@ def delete_task():
 
     try:
         if selected_task_index:
-            selected_task = tasks[selected_task_index[0]]
+            selected_task_title = task_listbox.get(selected_task_index[0])
+
+            # Find the corresponding task in the tasks list
+            selected_task = next((task for task in tasks if task[0] == selected_task_title), None)
 
             # Display a confirmation messagebox
             confirmation = messagebox.askyesno("Delete Task", f"Are you sure you want to delete the task:\n{selected_task[0]} {selected_task[1]} - {selected_task[2]}?")
@@ -338,7 +341,7 @@ def delete_task():
                 tasks.remove(selected_task)
 
                 # Update the database
-                the_cursor.execute('delete from tasks where title = ? and due_date = ? and description = ?', selected_task)
+                the_cursor.execute('delete from tasks where title = ? and due_date = ? and description = ?', (selected_task[0], selected_task[1], selected_task[2]))
 
                 # Call the function to update the list
                 list_update()
