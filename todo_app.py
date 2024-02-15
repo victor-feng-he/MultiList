@@ -189,21 +189,25 @@ def toggle_task_completion(task_title):
 
 def notify_task_due(task_name, due_date, description, days_before=0):
     today_date = datetime.today().strftime('%Y-%m-%d')
-    due_datetime = datetime.strptime(due_date, '%Y-%m-%d')
+    try:
+        due_datetime = datetime.strptime(due_date, '%Y-%m-%d')
 
-    # Calculate the reminder date by subtracting the specified number of days
-    reminder_date = due_datetime - timedelta(days=days_before)
+        # Calculate the reminder date by subtracting the specified number of days
+        reminder_date = due_datetime - timedelta(days=days_before)
 
-    if today_date == reminder_date.strftime('%Y-%m-%d'):
-        notification_title = f"Task Reminder: {task_name}"
-        notification_message = f"Your task '{task_name}' is due in {days_before} days on {due_date}.\n {description}"
+        if today_date == reminder_date.strftime('%Y-%m-%d'):
+            notification_title = f"Task Reminder: {task_name}"
+            notification_message = f"Your task '{task_name}' is due in {days_before} days on {due_date}.\n {description}"
 
-        # You can customize the notification duration, toast=False for other platforms
-        notification.notify(
-            title=notification_title,
-            message=notification_message,
-            app_icon=None  # You can provide the path to an icon if you have one
-        )
+            # You can customize the notification duration, toast=False for other platforms
+            notification.notify(
+                title=notification_title,
+                message=notification_message,
+                app_icon=None  # You can provide the path to an icon if you have one
+            )
+    except ValueError:
+        # Ignore error when user adds a task without a due date
+        pass
         
 def clear_placeholder(event, entry, placeholder):
     if entry.get() == placeholder:
@@ -220,7 +224,7 @@ def open_edit_due_date_window(selected_task):
     new_due_date_entry = ttk.Entry(edit_due_date_window, font=("Consolas", "12"), width=15)
     new_due_date_entry.pack(pady=5)
 
-    # Set the current due date as a placeholder in the entry field
+    # Set the due date as a placeholder in the entry field
     new_due_date_entry.insert(0, selected_task[1])
 
     # Validate and Confirm Changes Button
@@ -412,8 +416,8 @@ def retrieve_database():
 # Initialize main window
 guiWindow = tk.Tk()
 guiWindow.title("To-Do List Manager")
-guiWindow.geometry("550x550+750+250")
-#guiWindow.resizable(0, 0)
+guiWindow.geometry("800x610+750+250")
+guiWindow.resizable(0, 0)
 
 # Set color scheme for main window
 guiWindow.configure(bg=color_scheme["header_frame"])
@@ -470,6 +474,13 @@ header_label = ttk.Label(
     header_frame,
     text="The To-Do List",
     font=("Brush Script MT", "30"),
+    background=color_scheme["header_frame"],
+    foreground="#8B4513"
+)
+current_date_label = ttk.Label(
+    header_frame,
+    text=f"Date: {datetime.today().strftime('%Y-%m-%d')}",
+    font=("Consolas", "20"),
     background=color_scheme["header_frame"],
     foreground="#8B4513"
 )
@@ -551,6 +562,7 @@ exit_button = ttk.Button(
 
 # place
 header_label.pack(padx=20, pady=20)
+current_date_label.pack(padx=5, pady=5, side='top', anchor="center")
 task_label.place(x=30, y=40)
 task_field.place(x=30, y=80)
 due_date_entry.place(x=30, y=120)
