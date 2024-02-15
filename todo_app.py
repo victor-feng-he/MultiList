@@ -260,7 +260,7 @@ def show_task_description(task_title):
 
     if selected_task_index:
         selected_task = next((task for task in tasks if task[0] == task_title), None)
-        
+
         # Retrieve task name, description, and due date of the selected item
         task_title = selected_task[0]
         description = selected_task[2]
@@ -268,8 +268,8 @@ def show_task_description(task_title):
 
         # Check if a window for this task description already exists
         existing_window = next((window for window in open_description_windows if window.winfo_exists() and window.title() == task_title), None)
-        
-        if existing_window and existing_window.winfo_exists():
+
+        if existing_window:
             # Bring the existing window to the front
             existing_window.lift()
         else:
@@ -280,33 +280,33 @@ def show_task_description(task_title):
 
             open_description_windows.append(description_window)
 
-    # Retrieve the task details from the list based on the task title
-    selected_task = next((task for task in tasks if task[0] == task_title), None)
+            # Retrieve the task details from the list based on the task title
+            selected_task = next((task for task in tasks if task[0] == task_title), None)
 
-    if selected_task:
-        description_label = ttk.Label(description_window, text="Task Description:")
-        description_label.pack(pady=5)
+            description_label = ttk.Label(description_window, text="Task Description:")
+            description_label.pack(pady=5)
 
-        description_text = ttk.Label(description_window, text=selected_task[2], font=("Consolas", "12"))
-        description_text.pack(pady=10)
+            description_text = ttk.Label(description_window, text=selected_task[2], font=("Consolas", "12"))
+            description_text.pack(pady=10)
 
-        date_label = ttk.Label(description_window, text="Due Date:")
-        date_label.pack(pady=5)
+            date_label = ttk.Label(description_window, text="Due Date:")
+            date_label.pack(pady=5)
 
-        date_text = ttk.Label(description_window, text=selected_task[1], font=("Consolas", "12"))
-        date_text.pack(pady=10)
-        
-        # Add "Edit Due Date" Button
-        edit_due_date_button = ttk.Button(description_window, text="Edit Due Date", command=lambda: open_edit_due_date_window(selected_task))
-        edit_due_date_button.pack(pady=10)
+            date_text = ttk.Label(description_window, text=selected_task[1], font=("Consolas", "12"))
+            date_text.pack(pady=10)
 
-        # Add "Toggle Completion" Button
-        completion_button_text = "Mark as Complete" if not selected_task[3] else "Mark as Incomplete"
-        completion_button = ttk.Button(description_window, text=completion_button_text, command=lambda: toggle_task_completion(selected_task[0]))
-        completion_button.pack(pady=10)
+            # Add "Edit Due Date" Button
+            edit_due_date_button = ttk.Button(description_window, text="Edit Due Date", command=lambda: open_edit_due_date_window(selected_task))
+            edit_due_date_button.pack(pady=10)
 
-        # Bind the context menu for right-click
-        description_text.bind("<Button-3>", lambda event: show_context_menu(event, description_text))
+            # Add "Toggle Completion" Button
+            completion_button_text = "Mark as Complete" if not selected_task[3] else "Mark as Incomplete"
+            completion_button = ttk.Button(description_window, text=completion_button_text, command=lambda: toggle_task_completion(selected_task[0]))
+            completion_button.pack(pady=10)
+
+            # Bind the context menu for right-click
+            description_text.bind("<Button-3>", lambda event: show_context_menu(event, description_text))
+
 
 def show_context_menu(event, widget):
     context_menu = tk.Menu(widget, tearoff=0)
@@ -473,7 +473,7 @@ task_listbox.bind("<Double-Button-1>", lambda event: show_task_description(task_
 header_label = ttk.Label(
     header_frame,
     text="The To-Do List",
-    font=("Brush Script MT", "30"),
+    font=("Times New Roman", "30", "bold"),
     background=color_scheme["header_frame"],
     foreground="#8B4513"
 )
