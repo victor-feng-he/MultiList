@@ -473,7 +473,7 @@ task_listbox.bind("<Double-Button-1>", lambda event: show_task_description(task_
 header_label = ttk.Label(
     header_frame,
     text="The To-Do List",
-    font=("Times New Roman", "30", "bold"),
+    font=("Times New Roman", "30"),
     background=color_scheme["header_frame"],
     foreground="#8B4513"
 )
